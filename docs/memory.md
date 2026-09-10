@@ -1,0 +1,291 @@
+# Memory
+
+**This file is a running log — update it whenever meaningful progress
+happens** (a phase lands, a bug is found and fixed, a blocker shows up), not
+just at setup. A memory.md only ever written once is worth nothing to the
+next session.
+
+## Current state
+
+All 8 phases from the original spec are built and, as of 2026-08-30, the
+app is running against a **real hosted Supabase project**
+(`pyrjntehpqehchxluaws`), not local Docker — `.env.local` points at it.
+The core security model (ownership gate, billing, every table's write
+privileges) has now survived two rounds of real attacks against real
+infrastructure and is fixed by migration `0007`. As of 2026-09-01, a real
+scan has actually run end to end and completed successfully — Semgrep/
+Gitleaks/ZAP execution was the one piece of the pipeline that had never
+been observed working; it now has been. The one item that remains
+genuinely open, and cannot be closed by an AI session, is real legal
+counsel reviewing and signing off on the Terms of Service — see
+`phases.md` → Phase 8 for the exact wording of that caveat.
+
+## In progress
+
+Nothing actively in progress.
+
+## Open items / known gaps
+
+- **Auth, targets, the authorization gate, database write privileges, the
+  free-tier limit, scan-tool execution (ZAP), and PDF report generation are
+  all now verified against real infrastructure** (see the 2026-08-28,
+  2026-08-30, and 2026-09-01 log entries) — not mock data. Still
+  unverified: Semgrep/Gitleaks (the repo-scan path — needs a real GitHub
+  OAuth App + a repo, neither available here) and the Claude/Resend/
+  Razorpay integrations (no real API keys for any of them).
+- **Local Docker Supabase's daemon is intermittently unresponsive** and
+  disk on this host keeps drifting back to near-zero free even after being
+  freed — hit actual `ENOSPC` (system-wide, tool output writes failing)
+  while applying `0007` to local, recovered by clearing
+  `~/Library/Caches` again (12GB → freed) and restarting Docker Desktop a
+  second time. `redis:7-alpine` and the `edge-runtime` container didn't
+  come back up after that restart (existed but stopped, not
+  auto-restart-policy'd) — fixed with `docker start vibecoder-redis
+  supabase_edge_runtime_vibecoder-scanner`; all 13 local containers
+  (12 Supabase + Redis) are healthy again as of right after. Migration
+  `0007` IS now confirmed-applied to local too (re-verified with the same
+  `has_table_privilege` checks after the container restart cycle — the
+  grants persisted, as expected, since they live in Postgres's catalog,
+  not container state). If local Docker becomes unresponsive again, the
+  fix that's worked twice now: quit Docker Desktop (`osascript -e 'quit app
+  "Docker"'` + `pkill -9`), free host disk if `docker version` shows only
+  client info with no server response, relaunch (`open -a Docker`), wait
+  for `docker info` to succeed.
+- No customer-facing billing portal beyond upgrade/cancel.
+- `docs/` was seeded retroactively after Phases 0–7 already existed — if
+  anything below drifts from the code, trust the code and fix this file.
+
+## Log
+
+- **2026-08-24** — Phases 0–7 built in sequence this session (and prior
+  sessions in this conversation): design system + 3D hero, auth, ownership-
+  verification gate, Docker-sandboxed scan workers, Claude AI analysis
+  layer, findings dashboard, PDF reports + email notifications + scheduled
+  re-scans, Razorpay billing. During Phase 7, found and fixed a real
+  pre-existing gap: `targets.verified` and `users.plan` had no column-level
+  write protection — RLS's "own row" policies only check row ownership, so
+  a logged-in user could have called the Supabase client directly from
+  devtools to self-verify a target or self-upgrade their plan, bypassing
+  both the core legal requirement and billing entirely. Fixed via
+  `supabase/migrations/0005_lock_down_client_writes.sql` (column-level
+  `REVOKE UPDATE ... FROM authenticated`) plus switching
+  `/api/targets/[id]/verify`'s actual write to the service-role client.
+  `docs/` scaffold seeded at the end of this session. Ran a ponytail
+  (simplicity) pass over billing/queue/scanner code afterward: trimmed
+  `src/lib/queue.ts` and `src/lib/razorpay.ts`'s lazy-singleton boilerplate
+  and a per-call temp `Queue` in `worker/index.ts` — but the first attempt
+  went too far (eager top-level `new Razorpay(...)` / `new IORedis(...)`)
+  and broke `next build` outright, since Next executes route modules during
+  "Collecting page data" and Razorpay throws synchronously on a missing
+  `key_id`. Caught by actually running the build, not by inspection —
+  reverted to lazy init. Lesson: verify every "simplification" the same way
+  the original code was verified; a change that looks obviously safe in a
+  billing/queue module still needs the build run, not just typecheck+lint.
+  Then ran a design-taste-frontend audit over the landing/auth pages (per
+  docs/design.md's real tokens, not re-derived). Fixed real violations:
+  removed an em-dash-laden trust tagline crammed below the hero CTAs
+  (already redundant with step 1 of "How it works"), capped hero top
+  padding, swapped `auth-shell.tsx`'s `min-h-screen` for `min-h-[100dvh]`
+  (mobile Safari address-bar stability), rewrote "How it works" from three
+  identical feature cards with "1./2./3." labels (an explicitly named
+  AI-slop pattern) into a connected numbered-step layout, and removed
+  em-dashes from all user-visible copy site-wide. Verified via a fresh
+  browser tab (the reused dev tab had stale accumulated console/network
+  logs from earlier in the session — a recurring gotcha in this
+  environment, always open a new tab before trusting "no errors").
+  Closed out the one remaining Phase 7 gap: paid-user scan jobs now enqueue
+  unprioritized (BullMQ's actual fast lane — see comment in
+  `src/lib/queue.ts`) while free-user jobs get an explicit low priority, so
+  paid scans jump the queue ahead of free ones. Also caught and fixed a
+  drift bug in this pass: `README.md` had never been updated for Phase 7 at
+  all (still said "Phase 0-6... Razorpay billing not built yet" despite
+  billing being fully implemented) — a reminder that "update the docs" is
+  easy to silently skip when a phase ships without a dedicated pass at the
+  end of it. Then built Phase 8: `worker/lib/abuse-monitor.ts` reads
+  `audit_log` on a 15-minute interval (plain `setInterval` in the
+  already-long-running worker process, not a second BullMQ queue) and
+  emails `ADMIN_EMAIL` on a denial burst; expanded
+  `src/app/legal/terms/page.tsx` into a full draft covering the standard
+  clauses (billing, third-party processors, liability, termination, etc.)
+  with a visible "pending legal review" banner, since actual legal sign-off
+  is the one thing in this whole project that genuinely cannot be finished
+  by an AI session. All 8 phases from the original spec are now built.
+
+- **2026-08-28** — Set up a real local Supabase stack (`supabase init` +
+  `supabase start`, Docker) and tested end to end for the first time,
+  rather than mock data. Hit real infrastructure trouble along the way,
+  worth remembering: the host had only ~5GB free disk, which made Docker
+  Desktop's VM disk go read-only mid-pull and corrupt its local
+  content-addressable image store (`docker ps` hung indefinitely
+  afterward — not "slow," genuinely stuck). Fixed by clearing `~/.npm` +
+  `~/Library/Caches` (freed ~23GB), restarting Docker Desktop, and running
+  `docker system prune -af` to clear the corrupted blobs before retrying.
+  Docker's virtual disk does not shrink back after a prune, so disk stayed
+  tight (dropped to ~1.4GB free) for the rest of the session — safe for
+  Postgres/Redis/small images, not safe for the ZAP/Semgrep images a real
+  scan needs, so I stopped short of testing actual scan-tool execution
+  rather than risk a repeat corruption of the now-live Supabase containers.
+  What *did* get verified, for real:
+  - Signup → real Supabase Auth → `handle_new_user()` trigger → `public.users`
+    row created correctly.
+  - **Found and fixed a real bug this way**: `SignupForm` always showed
+    "check your inbox" even when `enable_confirmations = false` meant
+    `signUp()` already returned an active session — the user was silently
+    already logged in behind a message telling them to go check email that
+    was never sent. Now checks `data.session` and routes straight to the
+    dashboard when one exists.
+  - **Found and fixed a much bigger one**: adding a target failed with
+    `permission denied for table targets` — turned out RLS policies alone
+    were never enough. Postgres checks table-level GRANTs before RLS runs,
+    and migrations 0001–0004 never issued any; the `authenticated` and
+    `service_role` roles had zero SELECT/INSERT/UPDATE/DELETE on *any*
+    table in this project, on any environment, since the day they were
+    created. This would have silently broken the entire app — not just
+    locally — the first time anyone pointed it at a fresh Supabase project.
+    Fixed with migration `0006`, deliberately using column-level `GRANT
+    UPDATE (scan_frequency)` rather than a table-level `GRANT UPDATE`, to
+    avoid quietly re-enabling the columns `0005` had revoked. Verified this
+    distinction empirically, not just reasoned about: `has_column_privilege`
+    checks, a real `UPDATE` attempt as the `authenticated` role via
+    `SET ROLE`, and — most convincingly — a raw `curl PATCH` against the
+    live PostgREST API using a real logged-in user's JWT, replicating the
+    exact devtools attack the whole gate exists to prevent: attempting to
+    set `targets.verified = true` returns `403 permission denied`, while
+    the same call setting `scan_frequency` returns `200 OK`.
+  - The full authorization gate end to end: added a live-site target
+    against a throwaway local test server, verified it via the real
+    meta-tag HTTP check (not DNS — no real DNS to control), watched
+    `verified` flip to `true` and `audit_log` record both the pending and
+    success events with correct metadata.
+  - Free-tier 1-target limit: adding a second target correctly 402'd with
+    "Free plan allows 1 target."
+  - Scan trigger → BullMQ enqueue → worker pickup, confirmed via the
+    `bull:scans:*` keys in Redis and the scan row transitioning
+    `queued → running`. Killed the in-flight ZAP container pull to protect
+    the disk before it could complete — the resulting `failed` status,
+    `audit_log` entry, and `/scans/[id]` UI all rendered correctly, which
+    is itself a reasonable proxy for "the failure path works," even though
+    a successful scan was never observed.
+  - Billing page renders real plan state from the database correctly.
+  - GitHub OAuth / repo-scan path remains untested — needs a real GitHub
+    OAuth App and a repo, neither of which exist in this environment.
+
+  Also hit `ENOSPC` (disk completely full) mid-`next build` near the end of
+  this — the failed build had left a partial `.next/` that itself ate
+  ~1.3GB; deleting it recovered enough to finish cleanly. Host disk settled
+  around 2GB free. Left the local Supabase stack running (all 12 containers
+  healthy) per explicit choice, rather than tearing it down, so testing can
+  continue without re-pulling ~6GB of images. `.env.local` currently points
+  at this local stack (`http://127.0.0.1:54321`), not placeholder values —
+  swap back to a real project's credentials (or re-placeholder) before
+  trusting `.env.local.example`'s guidance at face value.
+
+- **2026-08-30** — User switched to a real hosted Supabase project
+  (couldn't free more local disk). Ran all 6 migrations directly via
+  `psql` against the hosted Postgres connection (not `supabase link` —
+  simpler, no OAuth needed, just the DB password). All applied cleanly,
+  first try, on totally independent infrastructure from the local Docker
+  test — a genuinely good sign for the migrations themselves.
+
+  Then re-ran the same "attack the live API as a logged-in user" test from
+  the 2026-08-28 session, expecting it to just confirm what was already
+  fixed. **It didn't hold.** `has_column_privilege` and a real `SET ROLE`
+  `UPDATE` both showed `authenticated` could still write `targets.verified`
+  and `users.plan` on hosted, despite migrations `0005`/`0006`. Checked
+  further and found the actual cause: hosted Supabase grants
+  `authenticated` broad table-level `INSERT`/`UPDATE`/`DELETE` on every
+  table by default, independent of this project's migrations — and a
+  column-level `REVOKE` (what `0005` did) **does not override a coexisting
+  table-level `GRANT`** in Postgres. `0006`'s column-scoped `GRANT` had been
+  written and verified against *local*, where no such pre-existing grant
+  exists — so it happened to work there and silently didn't transfer.
+
+  Confirmed the real severity with two live attacks against the hosted
+  PostgREST API, using a real logged-in test user's JWT (extracted from the
+  actual browser session cookie, not fabricated):
+  - `POST /rest/v1/targets` with `verified: true, authorization_attested:
+    true` → **201 Created**. A complete bypass of the ownership-verification
+    gate — the one thing the build brief called "non-negotiable."
+  - `PATCH /rest/v1/users?id=eq....` with `plan: "paid"` → **200 OK**. A
+    complete billing bypass.
+  - Checked every other table for the same pattern while in there:
+    `scans`, `findings`, `audit_log`, `github_connections` all had
+    unrestricted `INSERT`/`UPDATE`/`DELETE` for `authenticated` too — fake
+    scan results, a tampered or erased audit trail, and a hijacked GitHub
+    connection reference were all sitting open.
+
+  Fixed with migration `0007`: `REVOKE INSERT, UPDATE, DELETE` outright
+  from `authenticated` on every table (removing whatever ambient grant
+  existed, regardless of source), then `GRANT` back exactly one thing —
+  `UPDATE (scan_frequency)` on `targets`. Everything else moved to the
+  service-role client: `src/app/api/targets/route.ts` (both the repo and
+  site branches' `.insert()`) and `src/app/api/targets/[id]/scan/route.ts`
+  (the scan-row `.insert()`) no longer use the RLS-scoped client for
+  writes at all. Re-ran both attacks after applying `0007` — both now
+  `403 permission denied`, as designed. Then re-ran the *legitimate* flow
+  end to end (real signup, target creation, meta-tag verification) against
+  hosted to confirm the fix didn't also break what should work — it didn't.
+
+  Applied `0007` to hosted successfully; attempted to also apply it to
+  local for parity, but local's Docker containers had gone unresponsive by
+  that point (see Open items) — deferred, not urgent now that hosted is
+  primary.
+
+  **The lesson, stated plainly**: a security fix that was reasoned about
+  carefully, and empirically verified — against one environment — was still
+  wrong, because "empirically verified" only covers the environment you
+  verified it in. Two different Supabase environments had opposite default
+  states for the exact same migrations. Don't trust a database security
+  fix until it's been attacked on the actual environment real users will
+  hit, and re-attacked after any change that touches privileges.
+
+- **2026-09-01** — User asked to also apply `0007` to local (it had been
+  deferred). Local Docker was unresponsive again — this time a genuine
+  system-wide `ENOSPC` (tool output writes themselves failing, not just
+  `docker` commands). Recovered the same way as before: clear
+  `~/Library/Caches` (freed it back to 12GB), restart Docker Desktop.
+  `0007` applied to local cleanly on retry, and stayed applied across a
+  second unrelated restart later in the session (grants live in Postgres's
+  catalog, confirmed persistent as expected). `redis:7-alpine` and the
+  `edge-runtime` container had stopped (not auto-restart-policy'd) — fixed
+  with `docker start vibecoder-redis supabase_edge_runtime_vibecoder-scanner`
+  rather than a full `supabase start`/re-pull, since the containers still
+  existed, just stopped.
+
+  Then ran the scan trigger end to end for the first time in this whole
+  project's testing history, and **it worked**: real signup session,
+  `POST /api/targets/[id]/scan` → BullMQ → the local worker → a real
+  `docker run zaproxy/zap-stable zap-baseline.py` against the throwaway
+  local test site (whose IP had drifted *again* — this sandbox's `en0`
+  address changes somewhat often; worth expecting, not surprising, in this
+  environment specifically) → 9 real findings written to `findings`
+  (missing security headers, exactly what you'd expect scanning a bare
+  `python -m http.server` page) → `scans.status` → `done` → the `/scans/
+  [id]` UI rendering them grouped by severity, badge and all → the "PDF
+  report" button appearing (only shown when `status === "done"`) → an
+  actual `GET /api/scans/[id]/report` returning a real, valid
+  `application/pdf` blob. This is the first time any of the scan-execution
+  → findings → report pipeline had been observed working, as opposed to
+  code-reviewed; every earlier phase's "done" only covered up to the
+  Docker pull attempt.
+
+  Caught one more real bug from actually looking at the output: ZAP's
+  `desc`/`solution` fields carry HTML markup meant for its own report
+  renderer (`<p>...</p>`), and the raw-finding fallback (shown until AI
+  analysis rewrites it) was printing those tags literally as visible text.
+  Fixed with a small `stripHtml()` in `worker/scanners/site-scan.ts`.
+  Re-ran the scan (fast this time — the 3.6GB ZAP image was already
+  cached) and confirmed the fix in both the raw DB rows and the rendered
+  page.
+
+  AI analysis was correctly skipped throughout (no `ANTHROPIC_API_KEY` in
+  this environment) — the `scan.ai_analysis_skipped` audit_log entry and
+  the "hasn't been analyzed by AI yet" UI message both fired exactly as
+  designed, and the scan still completed and produced a usable report with
+  raw findings. That degrade-gracefully design decision from Phase 4 held
+  up under an actual failure condition, not just a hypothetical one.
+
+  Remaining unverified: the repo-scan path (Semgrep/Gitleaks, GitHub OAuth)
+  — needs a real GitHub OAuth App and a repo to scan, neither available
+  here — and the Claude/Resend/Razorpay integrations, which have no real
+  keys in this environment.
