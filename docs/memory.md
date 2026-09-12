@@ -28,6 +28,27 @@ On 2026-09-12, a full visual redesign landed (see that log entry) — dark
 palette, plus a real scan-in-progress animation replacing a static
 placeholder.
 
+Also on 2026-09-12: end-to-end signup (email/password and GitHub OAuth)
+was tested live in production and both work — a real confirm-email bug
+was found and fixed in the process (Supabase's "Confirm email" toggle was
+on with no SMTP configured, 500ing every signup; turned off in Supabase
+Dashboard → Authentication → Sign In/Providers). The billing (Razorpay)
+flow was also tested live: clicking "Upgrade to Pro" correctly surfaces
+"Billing isn't configured yet." with no crash, since `RAZORPAY_*` env vars
+are still unset — this is the code behaving correctly, not a bug.
+Displayed pricing was switched from INR to USD per request: migration
+`0009_pricing_usd.sql` (applied directly to the live `bareloop` DB via the
+Supabase SQL editor, with explicit user confirmation since it's a
+destructive drop-column) replaces `pricing_config.pro_price_inr` with
+`pro_price_usd numeric(10,2)`, set to `24`. Every reader/writer of that
+column (`src/app/page.tsx`, `pricing-teaser.tsx`, both admin pricing
+files, `admin/page.tsx`'s MRR estimate) was updated to match, and the
+admin pricing page's warning banner now also states that actually
+billing in USD requires Razorpay International/multi-currency to be
+enabled on the merchant account — a Razorpay-dashboard KYC step outside
+what this session can configure, same category of limitation as
+`RAZORPAY_PLAN_ID` itself.
+
 ## In progress
 
 Nothing actively in progress.

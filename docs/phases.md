@@ -108,6 +108,13 @@ don't let it drift into a forward-only plan.
 
 ## Phase 7 — Billing (Razorpay) ✅
 
+- [x] **2026-09-12**: verified live — upgrade flow correctly returns
+      "Billing isn't configured yet." (503, no crash) with `RAZORPAY_*`
+      unset. Displayed Pro price switched from INR to USD
+      (`pricing_config.pro_price_usd`, migration `0009`); real USD
+      billing still needs Razorpay International enabled on the merchant
+      account plus a USD `RAZORPAY_PLAN_ID` before this matters.
+
 - [x] Free tier: 1 target, manual scan only (enforced server-side in
       `POST /api/targets`)
 - [x] Paid tier: unlimited targets, scheduled scans, full PDF

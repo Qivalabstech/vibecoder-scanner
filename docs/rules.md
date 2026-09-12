@@ -133,4 +133,8 @@
   marketing page — it has no connection to what Razorpay actually
   charges (`RAZORPAY_PLAN_ID`'s plan). Don't let the two drift without
   telling the user; the admin pricing page's warning banner explaining
-  this is load-bearing copy, not decoration.
+  this is load-bearing copy, not decoration. As of migration `0009`, the
+  column is `pro_price_usd` (USD, not INR) — billing in USD for real
+  additionally requires Razorpay International/multi-currency enabled on
+  the merchant account, which is a Razorpay-dashboard KYC step, not
+  something a migration or env var can turn on.
