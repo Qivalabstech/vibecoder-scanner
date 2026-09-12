@@ -5,6 +5,30 @@ happens** (a phase lands, a bug is found and fixed, a blocker shows up), not
 just at setup. A memory.md only ever written once is worth nothing to the
 next session.
 
+## Current state (2026-09-12, rebrand: Vibecoder Scanner → Hakscan)
+
+Renamed the product from "Vibecoder Scanner" to **Hakscan** at the user's
+request. Domain research (WHOIS via who.is, not just search-engine
+indexing) confirmed `hakscan.com` is unregistered and no existing
+brand/company uses the name — `flawline.com` was the other strong
+available option but the user picked Hakscan.
+
+Renamed everywhere the old name appeared: page titles/metadata, the
+marketing nav wordmark, the auth-shell and dashboard sidebar wordmarks,
+the PDF report header/footer/document-title, the downloaded-report
+filename, the ToS body copy, the Resend "from" display name, the worker's
+temp-directory prefixes, `package.json`'s `name` field, and — functionally,
+not just cosmetically — the site-ownership verification challenge strings
+(`META_TAG_NAME`/`DNS_SUBDOMAIN` in `src/lib/verification.ts`, now
+`hakscan-site-verification` / `_hakscan-challenge`). Safe to change since
+the business report generated the same day confirmed zero real
+site-verification targets exist yet, only the 2 test ones from this
+session. **Did not** rename the GitHub repo (`Qivalabstech/vibecoder-scanner`)
+or the Vercel project/domain (`vibecoder-scanner-delta.vercel.app`) —
+those are separate, more disruptive actions (breaks existing clone URLs /
+webhook URLs already registered with PayPal and GitHub OAuth) that need
+their own explicit go-ahead once `hakscan.com` is actually acquired.
+
 ## Current state (2026-09-12, PayPal sandbox setup)
 
 PayPal billing is now fully wired and verified end-to-end in both dev and

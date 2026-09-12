@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Vibecoder Scanner: Security scans for AI-built apps",
+  title: "Hakscan: Security scans for AI-built apps",
   description:
     "Scan your GitHub repo or live site for vulnerabilities and get an AI-explained, prioritized report you can actually act on.",
 };

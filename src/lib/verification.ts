@@ -1,8 +1,8 @@
 import { randomBytes } from "crypto";
 import { resolveTxt } from "dns/promises";
 
-export const META_TAG_NAME = "vibecoder-site-verification";
-export const DNS_SUBDOMAIN = "_vibecoder-challenge";
+export const META_TAG_NAME = "hakscan-site-verification";
+export const DNS_SUBDOMAIN = "_hakscan-challenge";
 
 export function generateVerificationToken(): string {
   return randomBytes(16).toString("hex");

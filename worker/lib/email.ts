@@ -42,7 +42,7 @@ export async function sendScanCompleteEmail(opts: {
          <p><a href="${reportUrl}">View the full report</a></p>`;
 
   await resend.emails.send({
-    from: process.env.RESEND_FROM_EMAIL ?? "Vibecoder Scanner <onboarding@resend.dev>",
+    from: process.env.RESEND_FROM_EMAIL ?? "Hakscan <onboarding@resend.dev>",
     to: opts.to,
     subject,
     html: body,
@@ -65,7 +65,7 @@ export async function sendAbuseAlertEmail(opts: {
   const resend = new Resend(process.env.RESEND_API_KEY);
 
   await resend.emails.send({
-    from: process.env.RESEND_FROM_EMAIL ?? "Vibecoder Scanner <onboarding@resend.dev>",
+    from: process.env.RESEND_FROM_EMAIL ?? "Hakscan <onboarding@resend.dev>",
     to: process.env.ADMIN_EMAIL,
     subject: `Abuse flag: ${opts.deniedEventCount} denied attempts in an hour`,
     html: `<p>User <strong>${opts.userEmail ?? opts.userId}</strong> (id: ${opts.userId}) triggered

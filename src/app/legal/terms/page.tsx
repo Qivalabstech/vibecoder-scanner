@@ -13,7 +13,7 @@ export default function TermsPage() {
 
       <h2 className="mt-8 text-xl font-semibold">1. Acceptance of these Terms</h2>
       <p className="text-muted-foreground">
-        By creating an account or using Vibecoder Scanner (&ldquo;the
+        By creating an account or using Hakscan (&ldquo;the
         Service&rdquo;), you agree to these Terms. If you do not agree, do
         not use the Service. We may update these Terms from time to time;
         continued use after an update means you accept the revised Terms.
@@ -21,7 +21,7 @@ export default function TermsPage() {
 
       <h2 className="mt-8 text-xl font-semibold">2. What the Service does</h2>
       <p className="text-muted-foreground">
-        Vibecoder Scanner runs automated security scans (Semgrep, Gitleaks,
+        Hakscan runs automated security scans (Semgrep, Gitleaks,
         and a passive OWASP ZAP baseline) against GitHub repositories and
         live websites you add as targets, then uses the Claude API to
         explain the findings in plain language and suggest fixes. It is a
@@ -113,7 +113,7 @@ export default function TermsPage() {
 
       <h2 className="mt-8 text-xl font-semibold">11. Limitation of liability</h2>
       <p className="text-muted-foreground">
-        To the maximum extent permitted by law, Vibecoder Scanner will not
+        To the maximum extent permitted by law, Hakscan will not
         be liable for indirect, incidental, or consequential damages
         arising from your use of the Service, including damages resulting
         from a vulnerability the Service did not detect, or from a scan you

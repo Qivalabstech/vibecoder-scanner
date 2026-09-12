@@ -35,7 +35,7 @@ const SEMGREP_SEVERITY: Record<SemgrepResult["extra"]["severity"], Severity> = {
  * Nothing here ever touches the host filesystem outside the temp dir.
  */
 export async function runRepoScan(fullName: string, accessToken: string): Promise<NormalizedFinding[]> {
-  const workDir = await mkdtemp(path.join(tmpdir(), "vibecoder-scan-"));
+  const workDir = await mkdtemp(path.join(tmpdir(), "hakscan-scan-"));
   const repoDir = path.join(workDir, "repo");
 
   try {

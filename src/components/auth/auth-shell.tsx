@@ -32,7 +32,7 @@ export function AuthShell({
         <div className="w-full max-w-sm">
           <Link href="/" className="mb-10 flex items-center gap-2 font-semibold tracking-tight lg:hidden">
             <ShieldHalf className="size-5 text-primary" strokeWidth={1.75} />
-            Vibecoder Scanner
+            Hakscan
           </Link>
           <h1 className="font-heading text-2xl font-medium tracking-tight">{title}</h1>
           <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>

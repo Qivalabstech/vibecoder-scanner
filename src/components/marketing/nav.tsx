@@ -15,7 +15,7 @@ export function MarketingNav() {
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
         <Link href="/" className="flex items-center gap-2 font-heading font-medium tracking-tight">
           <ShieldHalf className="size-5 text-primary" strokeWidth={1.75} />
-          <span>VIBECODER_SCANNER</span>
+          <span>HAKSCAN</span>
         </Link>
         <nav className="hidden items-center gap-8 font-heading text-xs tracking-wide text-muted-foreground md:flex">
           <Link href="#how-it-works" className="hover:text-primary transition-colors">

@@ -45,7 +45,7 @@ function stripHtml(html: string): string {
  * whatever network the target needs, since it has to reach it.
  */
 export async function runSiteScan(url: string): Promise<NormalizedFinding[]> {
-  const outDir = await mkdtemp(path.join(tmpdir(), "vibecoder-zap-"));
+  const outDir = await mkdtemp(path.join(tmpdir(), "hakscan-zap-"));
   await chmod(outDir, 0o777); // ZAP's container runs as a non-root user
 
   try {

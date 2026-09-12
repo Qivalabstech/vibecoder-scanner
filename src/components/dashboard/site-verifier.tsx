@@ -76,7 +76,7 @@ export function SiteVerifier() {
           </TabsList>
           <TabsContent value="dns" className="space-y-2">
             <p className="text-xs text-muted-foreground">
-              Add a TXT record at <code className="rounded bg-muted px-1">_vibecoder-challenge.{host}</code>
+              Add a TXT record at <code className="rounded bg-muted px-1">_hakscan-challenge.{host}</code>
             </p>
             <pre className="overflow-x-auto rounded-lg bg-muted p-3 text-xs">{pending.verification_token}</pre>
           </TabsContent>
@@ -84,7 +84,7 @@ export function SiteVerifier() {
             <p className="text-xs text-muted-foreground">
               Add this to your site&apos;s <code className="rounded bg-muted px-1">&lt;head&gt;</code>
             </p>
-            <pre className="overflow-x-auto rounded-lg bg-muted p-3 text-xs">{`<meta name="vibecoder-site-verification" content="${pending.verification_token}" />`}</pre>
+            <pre className="overflow-x-auto rounded-lg bg-muted p-3 text-xs">{`<meta name="hakscan-site-verification" content="${pending.verification_token}" />`}</pre>
           </TabsContent>
         </Tabs>
 

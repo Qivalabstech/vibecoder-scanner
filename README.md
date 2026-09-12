@@ -1,4 +1,6 @@
-# Vibecoder Scanner
+# Hakscan
+
+_(formerly "Vibecoder Scanner" — renamed 2026-09-12; see `docs/memory.md`.)_
 
 Security scanning platform for indie founders building with AI. **Phases
 0–8 are all built**: design system, auth, the ownership verification gate,
@@ -120,7 +122,7 @@ supabase.com project.
   - Repo targets: re-verified server-side against the live GitHub API on
     every `POST /api/targets` — the UI only shows repos you administer, but
     the server never trusts that alone.
-  - Site targets: DNS TXT (`_vibecoder-challenge.<host>`) or `<meta>` tag
+  - Site targets: DNS TXT (`_hakscan-challenge.<host>`) or `<meta>` tag
     challenge, checked server-side in `src/lib/verification.ts`.
   - `src/proxy.ts` blocks unauthenticated requests to `/api/targets*` before
     they reach a route handler at all; `POST /api/targets/[id]/scan` then

@@ -43,7 +43,7 @@ export async function GET(_request: Request, ctx: RouteContext<"/api/scans/[id]/
   return new NextResponse(new Uint8Array(buffer), {
     headers: {
       "Content-Type": "application/pdf",
-      "Content-Disposition": `attachment; filename="vibecoder-scan-${scan.id.slice(0, 8)}.pdf"`,
+      "Content-Disposition": `attachment; filename="hakscan-${scan.id.slice(0, 8)}.pdf"`,
     },
   });
 }

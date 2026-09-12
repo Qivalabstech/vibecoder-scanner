@@ -125,7 +125,7 @@ function Header() {
   return (
     <View style={styles.header} fixed>
       <View style={styles.brandMark} />
-      <Text style={styles.brandName}>VIBECODER SCANNER</Text>
+      <Text style={styles.brandName}>HAKSCAN</Text>
       <Text style={styles.headerRight}>Confidential security report</Text>
     </View>
   );
@@ -134,7 +134,7 @@ function Header() {
 function Footer({ scanId }: { scanId: string }) {
   return (
     <View style={styles.footer} fixed>
-      <Text>Vibecoder Scanner · vibecoder-scanner.app · scan {scanId}</Text>
+      <Text>Hakscan · hakscan.com · scan {scanId}</Text>
       <Text
         style={{ marginLeft: "auto" }}
         render={({ pageNumber, totalPages }) => `Page ${pageNumber} of ${totalPages}`}
@@ -148,7 +148,7 @@ export function ScanReportDocument({ data, findings }: { data: ReportData; findi
   for (const f of findings) counts[f.severity] += 1;
 
   return (
-    <Document title={`Vibecoder Scanner Report — ${data.targetIdentifier}`}>
+    <Document title={`Hakscan Report — ${data.targetIdentifier}`}>
       <Page size="A4" style={styles.page}>
         <Header />
         <Footer scanId={data.scanId} />
