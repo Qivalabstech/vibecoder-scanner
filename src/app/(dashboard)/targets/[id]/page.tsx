@@ -52,7 +52,7 @@ export default async function TargetDetailPage({ params }: PageProps<"/targets/[
           ) : (
             <Globe className="size-5 text-muted-foreground" />
           )}
-          <h1 className="truncate text-2xl font-semibold tracking-tight">{target.identifier}</h1>
+          <h1 className="truncate font-heading text-2xl font-medium tracking-tight">{target.identifier}</h1>
           {target.verified ? (
             <Badge variant="secondary" className="gap-1 text-severity-low">
               <ShieldCheck className="size-3" />

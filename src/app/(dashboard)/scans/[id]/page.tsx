@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ScanStatusBadge, type ScanStatus } from "@/components/dashboard/scan-status-badge";
 import { ScanPoller } from "@/components/dashboard/scan-poller";
+import { ScanProgressAnimation } from "@/components/dashboard/scan-progress-animation";
 import { FindingCard, type FindingRow } from "@/components/dashboard/finding-card";
 import { SEVERITY_LABEL, SEVERITY_ORDER, type Severity } from "@/lib/severity";
 import { ArrowLeft, Globe, FileDown } from "lucide-react";
@@ -47,7 +48,7 @@ export default async function ScanDetailPage({ params }: PageProps<"/scans/[id]"
           ) : (
             <Globe className="size-5 text-muted-foreground" />
           )}
-          <h1 className="truncate text-2xl font-semibold tracking-tight">{target?.identifier}</h1>
+          <h1 className="truncate font-heading text-2xl font-medium tracking-tight">{target?.identifier}</h1>
           <ScanStatusBadge status={scan.status as ScanStatus} />
           {scan.status === "done" && (
             <Button variant="outline" size="sm" className="ml-auto" render={<a href={`/api/scans/${scan.id}/report`} />}>
@@ -65,13 +66,7 @@ export default async function ScanDetailPage({ params }: PageProps<"/scans/[id]"
       <ScanPoller status={scan.status as ScanStatus} />
 
       {scan.status === "queued" || scan.status === "running" ? (
-        <Card className="border-dashed">
-          <CardContent className="py-12 text-center text-sm text-muted-foreground">
-            {scan.status === "queued"
-              ? "Waiting for a scan worker to pick this up…"
-              : "Scan in progress. This updates automatically."}
-          </CardContent>
-        </Card>
+        <ScanProgressAnimation targetType={target?.type as "repo" | "site" | undefined} />
       ) : scan.status === "failed" ? (
         <Card className="border-destructive/40">
           <CardContent className="py-12 text-center text-sm text-muted-foreground">

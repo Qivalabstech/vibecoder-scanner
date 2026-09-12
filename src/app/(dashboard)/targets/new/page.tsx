@@ -11,7 +11,7 @@ export default function NewTargetPage() {
   return (
     <div className="mx-auto max-w-xl space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Add a target</h1>
+        <h1 className="font-heading text-2xl font-medium tracking-tight">Add a target</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           No scan runs until ownership is verified: for repos, that&apos;s enforced through your GitHub
           permissions; for sites, through a DNS or meta-tag challenge.

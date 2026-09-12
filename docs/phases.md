@@ -13,6 +13,12 @@ don't let it drift into a forward-only plan.
       (`src/components/three/`), lazy-loaded, static fallback for
       `prefers-reduced-motion` / low-end devices / no-WebGL
 - [x] Landing page with the same 3D visual in the hero
+- [x] **2026-09-12 redesign**: "operator console" identity (phosphor-green
+      accent, mono headings, hairline radius) replacing the earlier
+      generic-SaaS violet palette — see `design.md` and `memory.md` for
+      details. Includes a real scan-in-progress animation
+      (`ScanProgressAnimation`) on `/scans/[id]`, replacing a static
+      placeholder card.
 
 ## Phase 1 — Project scaffold + auth ✅
 

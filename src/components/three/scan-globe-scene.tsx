@@ -32,16 +32,16 @@ function Globe() {
   return (
     <group ref={group}>
       <mesh geometry={wireGeometry}>
-        <meshBasicMaterial color="#a78bfa" wireframe transparent opacity={0.55} />
+        <meshBasicMaterial color="#3ef08c" wireframe transparent opacity={0.5} />
       </mesh>
       <mesh>
         <icosahedronGeometry args={[1.58, 1]} />
-        <meshBasicMaterial color="#c4b5fd" wireframe transparent opacity={0.15} />
+        <meshBasicMaterial color="#a7f7cd" wireframe transparent opacity={0.13} />
       </mesh>
       {/* scan pulse ring */}
       <mesh ref={pulseRef} rotation={[Math.PI / 2, 0, 0]}>
         <ringGeometry args={[0.98, 1, 64]} />
-        <meshBasicMaterial color="#22d3ee" transparent opacity={0.4} side={THREE.DoubleSide} />
+        <meshBasicMaterial color="#3ef08c" transparent opacity={0.45} side={THREE.DoubleSide} />
       </mesh>
     </group>
   );

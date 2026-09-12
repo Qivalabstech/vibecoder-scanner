@@ -9,7 +9,7 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-sans);
   --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
+  --font-heading: var(--font-geist-mono);
   --color-severity-critical: var(--severity-critical);
   --color-severity-high: var(--severity-high);
   --color-severity-medium: var(--severity-medium);
@@ -55,80 +55,83 @@
 :root {
   /* light mode: kept minimal — this product is dark-mode-first */
   --background: oklch(0.995 0 0);
-  --foreground: oklch(0.16 0.01 280);
+  --foreground: oklch(0.16 0.02 152);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.16 0.01 280);
+  --card-foreground: oklch(0.16 0.02 152);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.16 0.01 280);
-  --primary: oklch(0.55 0.19 280);
+  --popover-foreground: oklch(0.16 0.02 152);
+  --primary: oklch(0.5 0.15 152);
   --primary-foreground: oklch(0.99 0 0);
-  --secondary: oklch(0.96 0.005 280);
-  --secondary-foreground: oklch(0.2 0.01 280);
-  --muted: oklch(0.96 0.005 280);
-  --muted-foreground: oklch(0.5 0.01 280);
-  --accent: oklch(0.94 0.03 280);
-  --accent-foreground: oklch(0.3 0.1 280);
+  --secondary: oklch(0.96 0.01 152);
+  --secondary-foreground: oklch(0.2 0.02 152);
+  --muted: oklch(0.96 0.01 152);
+  --muted-foreground: oklch(0.5 0.015 152);
+  --accent: oklch(0.93 0.05 152);
+  --accent-foreground: oklch(0.3 0.1 152);
   --destructive: oklch(0.58 0.22 27);
-  --border: oklch(0.91 0.005 280);
-  --input: oklch(0.91 0.005 280);
-  --ring: oklch(0.55 0.19 280);
-  --chart-1: oklch(0.55 0.19 280);
+  --border: oklch(0.9 0.01 152);
+  --input: oklch(0.9 0.01 152);
+  --ring: oklch(0.5 0.15 152);
+  --chart-1: oklch(0.5 0.15 152);
   --chart-2: oklch(0.6 0.15 200);
   --chart-3: oklch(0.65 0.18 40);
   --chart-4: oklch(0.55 0.2 20);
-  --chart-5: oklch(0.5 0.02 280);
-  --radius: 0.75rem;
+  --chart-5: oklch(0.5 0.02 152);
+  --radius: 0.4rem;
   --severity-critical: oklch(0.58 0.22 27);
   --severity-high: oklch(0.68 0.19 45);
   --severity-medium: oklch(0.8 0.16 90);
   --severity-low: oklch(0.6 0.12 230);
-  --sidebar: oklch(0.98 0.003 280);
-  --sidebar-foreground: oklch(0.16 0.01 280);
-  --sidebar-primary: oklch(0.55 0.19 280);
+  --sidebar: oklch(0.98 0.005 152);
+  --sidebar-foreground: oklch(0.16 0.02 152);
+  --sidebar-primary: oklch(0.5 0.15 152);
   --sidebar-primary-foreground: oklch(0.99 0 0);
-  --sidebar-accent: oklch(0.94 0.03 280);
-  --sidebar-accent-foreground: oklch(0.3 0.1 280);
-  --sidebar-border: oklch(0.91 0.005 280);
-  --sidebar-ring: oklch(0.55 0.19 280);
+  --sidebar-accent: oklch(0.93 0.05 152);
+  --sidebar-accent-foreground: oklch(0.3 0.1 152);
+  --sidebar-border: oklch(0.9 0.01 152);
+  --sidebar-ring: oklch(0.5 0.15 152);
 }
 
 .dark {
-  /* near-black, not pure black — reduces halation/glow of light text on OLED+LCD */
-  --background: oklch(0.135 0.006 280);
-  --foreground: oklch(0.96 0.005 280);
-  --card: oklch(0.17 0.007 280);
-  --card-foreground: oklch(0.96 0.005 280);
-  --popover: oklch(0.17 0.007 280);
-  --popover-foreground: oklch(0.96 0.005 280);
-  --primary: oklch(0.72 0.16 280);
-  --primary-foreground: oklch(0.14 0.01 280);
-  --secondary: oklch(0.24 0.01 280);
-  --secondary-foreground: oklch(0.96 0.005 280);
-  --muted: oklch(0.22 0.008 280);
-  --muted-foreground: oklch(0.65 0.015 280);
-  --accent: oklch(0.27 0.04 280);
-  --accent-foreground: oklch(0.92 0.02 280);
+  /* near-black ops-console glass, faint phosphor-green tint rather than
+     neutral gray — the accent hue (152, terminal green) leaks slightly
+     into the neutrals so the whole UI reads as "one system," not a gray
+     app with a green button glued on. */
+  --background: oklch(0.12 0.012 152);
+  --foreground: oklch(0.94 0.015 152);
+  --card: oklch(0.155 0.014 152);
+  --card-foreground: oklch(0.94 0.015 152);
+  --popover: oklch(0.155 0.014 152);
+  --popover-foreground: oklch(0.94 0.015 152);
+  --primary: oklch(0.8 0.19 152);
+  --primary-foreground: oklch(0.14 0.02 152);
+  --secondary: oklch(0.22 0.015 152);
+  --secondary-foreground: oklch(0.94 0.015 152);
+  --muted: oklch(0.2 0.012 152);
+  --muted-foreground: oklch(0.63 0.02 152);
+  --accent: oklch(0.26 0.06 152);
+  --accent-foreground: oklch(0.9 0.03 152);
   --destructive: oklch(0.7 0.19 22);
-  --border: oklch(1 0 0 / 9%);
-  --input: oklch(1 0 0 / 12%);
-  --ring: oklch(0.72 0.16 280);
-  --chart-1: oklch(0.72 0.16 280);
+  --border: oklch(0.85 0.05 152 / 12%);
+  --input: oklch(0.85 0.05 152 / 15%);
+  --ring: oklch(0.8 0.19 152);
+  --chart-1: oklch(0.8 0.19 152);
   --chart-2: oklch(0.7 0.13 200);
   --chart-3: oklch(0.75 0.16 60);
   --chart-4: oklch(0.68 0.19 22);
-  --chart-5: oklch(0.65 0.02 280);
+  --chart-5: oklch(0.65 0.02 152);
   --severity-critical: oklch(0.7 0.19 22);
   --severity-high: oklch(0.75 0.16 50);
   --severity-medium: oklch(0.84 0.15 92);
   --severity-low: oklch(0.72 0.11 230);
-  --sidebar: oklch(0.15 0.007 280);
-  --sidebar-foreground: oklch(0.96 0.005 280);
-  --sidebar-primary: oklch(0.72 0.16 280);
-  --sidebar-primary-foreground: oklch(0.14 0.01 280);
-  --sidebar-accent: oklch(0.24 0.01 280);
-  --sidebar-accent-foreground: oklch(0.96 0.005 280);
-  --sidebar-border: oklch(1 0 0 / 9%);
-  --sidebar-ring: oklch(0.72 0.16 280);
+  --sidebar: oklch(0.135 0.014 152);
+  --sidebar-foreground: oklch(0.94 0.015 152);
+  --sidebar-primary: oklch(0.8 0.19 152);
+  --sidebar-primary-foreground: oklch(0.14 0.02 152);
+  --sidebar-accent: oklch(0.22 0.015 152);
+  --sidebar-accent-foreground: oklch(0.94 0.015 152);
+  --sidebar-border: oklch(0.85 0.05 152 / 12%);
+  --sidebar-ring: oklch(0.8 0.19 152);
 }
 
 @layer base {
@@ -141,6 +144,51 @@
   html {
     @apply font-sans;
     color-scheme: dark;
+  }
+}
+
+@layer utilities {
+  /* the signature texture: a faint CRT scanline sweep over the console
+     chrome. Kept to ~2-4% opacity so it reads as "operator terminal" at a
+     glance without ever fighting body-copy legibility. */
+  .scanlines {
+    position: relative;
+    isolation: isolate;
+  }
+  .scanlines::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background-image: repeating-linear-gradient(
+      to bottom,
+      oklch(1 0 0 / 3%) 0px,
+      oklch(1 0 0 / 3%) 1px,
+      transparent 1px,
+      transparent 3px
+    );
+  }
+
+  /* faint terminal grid, used behind hero/console sections instead of a
+     stock gradient blob. Applied via ::before (like .scanlines) so the
+     fade mask only ever touches the decorative layer, never real content
+     stacked in front of it. */
+  .console-grid {
+    position: relative;
+    isolation: isolate;
+  }
+  .console-grid::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background-image:
+      linear-gradient(oklch(0.8 0.19 152 / 6%) 1px, transparent 1px),
+      linear-gradient(to right, oklch(0.8 0.19 152 / 6%) 1px, transparent 1px);
+    background-size: 42px 42px;
+    mask-image: radial-gradient(ellipse 70% 60% at 50% 0%, black 40%, transparent 100%);
   }
 }
 

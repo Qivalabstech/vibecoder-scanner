@@ -7,18 +7,26 @@ next session.
 
 ## Current state
 
-All 8 phases from the original spec are built and, as of 2026-08-30, the
-app is running against a **real hosted Supabase project**
-(`pyrjntehpqehchxluaws`), not local Docker — `.env.local` points at it.
-The core security model (ownership gate, billing, every table's write
-privileges) has now survived two rounds of real attacks against real
-infrastructure and is fixed by migration `0007`. As of 2026-09-01, a real
-scan has actually run end to end and completed successfully — Semgrep/
-Gitleaks/ZAP execution was the one piece of the pipeline that had never
-been observed working; it now has been. The one item that remains
-genuinely open, and cannot be closed by an AI session, is real legal
-counsel reviewing and signing off on the Terms of Service — see
+All 8 phases from the original spec are built. As of 2026-09-11 the app is
+**live in production**: Next.js app on Vercel
+(`https://vibecoder-scanner-delta.vercel.app`, team `qivalabstechs-projects`,
+repo `github.com/Qivalabstech/vibecoder-scanner`, public), the scan worker
+on a DigitalOcean droplet (Bangalore, systemd-managed), Redis via Upstash
+shared between both, and the database is a **different Supabase project
+than earlier sessions used** — see the 2026-09-11 log entry for why and
+exactly what changed. GitHub OAuth is fully wired against this current
+Supabase project (verified: the flow reaches GitHub's real authorize
+screen with the correct redirect target). The core security model
+(ownership gate, billing, every table's write privileges) is fixed by
+migration `0007`, re-applied cleanly to the new project. The one item that
+remains genuinely open, and cannot be closed by an AI session, is real
+legal counsel reviewing and signing off on the Terms of Service — see
 `phases.md` → Phase 8 for the exact wording of that caveat.
+
+On 2026-09-12, a full visual redesign landed (see that log entry) — dark
+"operator console" identity replacing the earlier generic-SaaS violet
+palette, plus a real scan-in-progress animation replacing a static
+placeholder.
 
 ## In progress
 
@@ -289,3 +297,107 @@ Nothing actively in progress.
   — needs a real GitHub OAuth App and a repo to scan, neither available
   here — and the Claude/Resend/Razorpay integrations, which have no real
   keys in this environment.
+
+- **2026-09-11** — Deployed to real infrastructure end to end: worker on a
+  DigitalOcean droplet (Bangalore, $6/mo, systemd unit
+  `vibecoder-worker.service`, Docker + Node 22 + git installed directly on
+  the host since it needs to spawn sibling scanner containers), Redis
+  moved from local-only to a shared Upstash instance so the VPS worker and
+  whatever runs the Next.js app can enqueue/consume the same queue, and
+  the app itself deployed to Vercel
+  (`vibecoder-scanner-delta.vercel.app`, team `qivalabstechs-projects`,
+  the real `tech@qivalabs.com` account — not the two other Vercel/GitHub
+  identities this session touched along the way while sorting out which
+  account actually owned what). Code pushed to a new GitHub repo,
+  `github.com/Qivalabstech/vibecoder-scanner` (public).
+
+  Verified the whole pipeline for real before calling it done: pointed
+  local dev at the Upstash Redis, triggered a scan through the actual UI,
+  and watched the VPS worker (via `journalctl`) pick up the BullMQ job,
+  run a real `docker run zaproxy/zap-stable` against a throwaway test
+  server hosted on the VPS itself (the original target was a private
+  10.x address on this sandbox, unreachable from a public VPS — spun up a
+  temporary `python -m http.server` on the droplet's own public IP,
+  pointed the target's `identifier` at it via trusted DB access, scanned
+  it, then reverted the identifier and tore the test server + firewall
+  rule down afterward), and produced 9 real findings end to end.
+
+  **Also swapped the Supabase project mid-session.** The original
+  `pyrjntehpqehchxluaws` project referenced everywhere in earlier
+  sessions turned out to belong to a Supabase account nobody in this
+  session had login access to — checked every account/token available
+  (browser logins, the Supabase CLI's own stored credential, which
+  belongs to yet a third account) and none of them could reach it, so
+  there was no way to configure its GitHub OAuth provider. The user
+  decided to stop hunting for the old account and just use a project they
+  did have fresh access to instead (`bareloop`,
+  `oadghnzcqbefuxfyxmrw.supabase.co`, under `demoqiva@gmail.com`) — it had
+  been paused; resumed it, re-ran all 7 migrations against it clean (no
+  errors), and repointed every environment (`.env.local`, Vercel, the VPS
+  worker's `.env`) at the new URL/keys. Also created a fresh GitHub OAuth
+  App (`Vibecoder Scanner`, owned by `Qivalabstech`, since the old one's
+  callback pointed at the now-unreachable project) and wired it into the
+  new project's Auth → Providers → GitHub, plus added the production
+  domain to Supabase's redirect-URL allowlist. Confirmed working up to
+  GitHub's own "Authorize" screen showing the correct redirect target
+  (`oadghnzcqbefuxfyxmrw.supabase.co`) — the final click needs a human,
+  since GitHub's authorize button is disabled behind a bot-detection
+  script that a scripted click legitimately can't (and shouldn't try to)
+  get past.
+
+  Note: the `bareloop` project had pre-existing, unrelated tables
+  (`founders`, `mrr_snapshots`, `razorpay_credentials`) from whatever it
+  was used for before — left untouched, not vibecoder-scanner's data.
+
+  Lesson worth keeping: this repo's Vercel dashboard UI was unreliable for
+  scripted interaction all session (buttons with real, non-disabled
+  onClick handlers that silently no-op on synthetic clicks; a background
+  request-storm that triggered real 429s and made pages appear to load
+  with stale/empty data). The reliable pattern that worked every time:
+  add environment variables **one at a time** (batching multiple in one
+  "Add Environment Variable" form silently failed to save, even though no
+  validation error was ever shown), and take a fresh screenshot
+  immediately before every click rather than reusing an old one, since
+  the page kept re-rendering between actions.
+
+- **2026-09-12** — Full visual redesign to a dark "operator console"
+  identity (the user asked for something that reads as an elite
+  hacking/pentest team's own site, not generic security SaaS), plus a
+  real scan-in-progress animation. Followed the razamdesign
+  Direction→Motion→Build→Verify flow, compressed to fit the session:
+  loaded `frontend-design` for the direction pass, made the palette/type
+  decisions directly (documented in `design.md`) rather than also loading
+  every referenced sub-skill, then built and verified in-browser.
+
+  Changes: primary accent moved from violet (~280° OKLCH) to phosphor
+  terminal-green (~152°), with that hue leaking faintly into all dark-mode
+  neutrals rather than sitting alone on gray; `--font-heading` repointed
+  from sans to Geist Mono, which retroactively restyled every existing
+  `font-heading` usage (shadcn Card/Dialog titles) for free; border radius
+  cut from `0.75rem` to `0.4rem`; added `.scanlines` and `.console-grid`
+  CSS-only texture utilities. New `ScanProgressAnimation` component
+  replaces the static "scan in progress" placeholder on `/scans/[id]` —
+  a terminal-feed of plausible in-flight steps (different copy for
+  `repo` vs `site` targets) plus a radar-sweep icon, explicitly labeled to
+  the reader as illustrative rather than real log tailing, since the
+  worker doesn't stream live output to the browser. Added a shared
+  `TypedText` typewriter component, used for a boot-sequence line in the
+  hero. Severity colors, the 3D globe's geometry/behavior, and all
+  component logic were left alone — this was a restyle, not a rebuild.
+
+  Caught one real bug while building: an earlier version of the
+  `.console-grid` utility applied its fade mask directly to the hero
+  `<section>`, which meant the mask (meant only for a decorative grid
+  layer) also faded out the real heading/paragraph text stacked in front
+  of it. Fixed by moving the grid to a `::before` pseudo-element, matching
+  the pattern `.scanlines` already used — verified by screenshot before
+  and after.
+
+  Verified in-browser: landing page (hero, nav, boot line), scan detail
+  page in both `queued`/`running` (temporarily flipped a real scan's
+  status via trusted DB access to see the animation live, then reverted
+  it) and `done` states with real findings, and the dashboard overview.
+  No console errors. Did not run a full accessibility/contrast audit pass
+  or the dedicated `find-animation-opportunities`/`improve-animations`
+  skills separately — worth a follow-up if the user wants that level of
+  rigor.
