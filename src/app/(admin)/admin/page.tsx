@@ -1,6 +1,7 @@
 import { createServiceClient } from "@/lib/supabase/service";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { AnimatedNumber } from "@/components/ui/animated-number";
 
 export const dynamic = "force-dynamic";
 
@@ -152,7 +153,9 @@ function StatCard({ label, value, hint }: { label: string; value: string | numbe
     <Card>
       <CardContent className="p-4">
         <p className="font-heading text-[11px] tracking-wide text-muted-foreground">{label.toUpperCase()}</p>
-        <p className="mt-1 font-heading text-2xl font-medium">{value}</p>
+        <div className="mt-1 font-heading text-2xl font-medium">
+          {typeof value === "number" ? <AnimatedNumber value={value} /> : value}
+        </div>
         {hint && <p className="mt-1 text-[11px] text-muted-foreground">{hint}</p>}
       </CardContent>
     </Card>

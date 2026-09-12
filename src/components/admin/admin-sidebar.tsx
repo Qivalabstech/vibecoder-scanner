@@ -2,13 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutGrid, IndianRupee, ShieldHalf, ArrowLeft } from "lucide-react";
+import { LayoutGrid, DollarSign, ShieldHalf, ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SignOutButton } from "@/components/dashboard/sign-out-button";
 
 const links = [
   { href: "/admin", label: "Overview", icon: LayoutGrid },
-  { href: "/admin/pricing", label: "Pricing", icon: IndianRupee },
+  { href: "/admin/pricing", label: "Pricing", icon: DollarSign },
 ];
 
 export function AdminSidebar({ email }: { email: string }) {
@@ -31,10 +31,10 @@ export function AdminSidebar({ email }: { email: string }) {
               key={link.href}
               href={link.href}
               className={cn(
-                "flex items-center gap-2 rounded-md px-3 py-2 font-heading text-xs tracking-wide transition-colors",
+                "flex items-center gap-2 rounded-md border-l-2 px-3 py-2 font-heading text-xs tracking-wide transition-colors",
                 active
-                  ? "bg-accent text-accent-foreground"
-                  : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+                  ? "border-primary bg-accent text-accent-foreground"
+                  : "border-transparent text-muted-foreground hover:bg-accent/50 hover:text-foreground"
               )}
             >
               <link.icon className="size-4" />

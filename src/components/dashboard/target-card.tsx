@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { GithubIcon } from "@/components/icons/github-icon";
 import { Badge } from "@/components/ui/badge";
 import { TriggerScanButton } from "@/components/dashboard/trigger-scan-button";
+import { BorderBeam } from "@/components/ui/border-beam";
 
 export interface TargetRow {
   id: string;
@@ -19,7 +20,10 @@ export interface TargetRow {
 export function TargetCard({ target }: { target: TargetRow }) {
   return (
     <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}>
-      <Card>
+      <Card className="relative overflow-hidden">
+        {target.verified && (
+          <BorderBeam size={80} duration={10} colorFrom="var(--color-severity-low)" colorTo="transparent" />
+        )}
         <CardContent className="flex items-center gap-4 py-4">
           <div className="flex size-10 items-center justify-center rounded-lg bg-accent">
             {target.type === "repo" ? (

@@ -1,5 +1,6 @@
 import { createServiceClient } from "@/lib/supabase/service";
 import { PricingForm } from "@/components/admin/pricing-form";
+import { CopyButton } from "@/components/ui/copy-button";
 
 export const dynamic = "force-dynamic";
 
@@ -17,6 +18,14 @@ export default async function AdminPricingPage() {
       </div>
 
       <PricingForm initialPrice={pricing?.pro_price_usd ?? 24} />
+
+      <div className="flex items-center justify-between rounded-md border border-border/60 bg-card/40 px-4 py-3 text-sm">
+        <div>
+          <p className="font-heading text-[11px] tracking-wide text-muted-foreground">CURRENT PAYPAL_PLAN_ID</p>
+          <p className="mt-1 font-mono text-xs">{process.env.PAYPAL_PLAN_ID || "not set"}</p>
+        </div>
+        {process.env.PAYPAL_PLAN_ID && <CopyButton code={process.env.PAYPAL_PLAN_ID} />}
+      </div>
 
       <div className="rounded-md border border-severity-medium/30 bg-severity-medium/10 p-4 text-sm">
         <p className="font-heading text-xs font-medium tracking-wide text-severity-medium">
