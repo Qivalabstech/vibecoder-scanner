@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { ShieldHalf } from "lucide-react";
 import { ScanVisual } from "@/components/three/scan-visual";
+import { BorderBeam } from "@/components/ui/border-beam";
+import { CyberGlitchText } from "@/components/ui/cyber-glitch-text";
 
 export function AuthShell({
   title,
@@ -14,13 +16,15 @@ export function AuthShell({
   return (
     <div className="grid min-h-[100dvh] lg:grid-cols-2">
       <div className="relative hidden items-center justify-center overflow-hidden bg-gradient-to-b from-card to-background lg:flex">
+        <BorderBeam size={260} duration={12} colorFrom="var(--color-primary)" colorTo="transparent" />
         <div className="absolute inset-0 -z-0 opacity-70">
           <ScanVisual className="size-full" />
         </div>
         <div className="relative z-10 max-w-sm px-10 text-center">
           <ShieldHalf className="mx-auto mb-6 size-10 text-primary" strokeWidth={1.5} />
           <p className="text-lg font-medium text-foreground/90">
-            Every scan starts with proof it&apos;s yours to scan.
+            Every scan starts with <CyberGlitchText text="proof" scrambleDuration={30} /> it&apos;s
+            yours to scan.
           </p>
           <p className="mt-2 text-sm text-muted-foreground">
             Ownership verification is enforced at the API layer, not just the UI.

@@ -1,4 +1,6 @@
 import { KeyRound, ScanSearch, FileText } from "lucide-react";
+import { CyberGlitchText } from "@/components/ui/cyber-glitch-text";
+import { BorderBeam } from "@/components/ui/border-beam";
 
 const steps = [
   {
@@ -25,7 +27,8 @@ export function HowItWorks() {
   return (
     <section id="how-it-works" className="mx-auto max-w-5xl px-6 py-24">
       <h2 className="max-w-md text-3xl font-semibold tracking-tight">
-        Three steps between &ldquo;I hope this is secure&rdquo; and knowing.
+        Three steps between &ldquo;I hope this is secure&rdquo; and{" "}
+        <CyberGlitchText text="knowing." scrambleDuration={30} />
       </h2>
       <div className="relative mt-14 grid gap-10 md:grid-cols-3 md:gap-6">
         <div
@@ -34,7 +37,8 @@ export function HowItWorks() {
         />
         {steps.map((step, i) => (
           <div key={step.title} className="relative">
-            <div className="relative z-10 flex size-10 items-center justify-center rounded-full border border-border bg-background">
+            <div className="relative z-10 flex size-10 items-center justify-center overflow-hidden rounded-full border border-border bg-background">
+              <BorderBeam size={30} duration={8} delay={i * 2} colorFrom="var(--color-primary)" colorTo="transparent" />
               <step.icon className="size-4.5 text-primary" strokeWidth={1.75} />
             </div>
             <p className="mt-4 font-medium">

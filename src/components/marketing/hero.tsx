@@ -7,6 +7,8 @@ import { ScanVisual } from "@/components/three/scan-visual";
 import { ArrowRight } from "lucide-react";
 import { GithubIcon } from "@/components/icons/github-icon";
 import { TypedText } from "@/components/typed-text";
+import { CyberGlitchText } from "@/components/ui/cyber-glitch-text";
+import { BorderBeam } from "@/components/ui/border-beam";
 
 export function MarketingHero() {
   return (
@@ -36,7 +38,9 @@ export function MarketingHero() {
         >
           You shipped fast.
           <br />
-          <span className="text-primary">Now find out what got skipped.</span>
+          <span className="text-primary">
+            Now find out what got <CyberGlitchText text="skipped." scrambleDuration={30} />
+          </span>
         </motion.h1>
 
         <motion.p
@@ -65,14 +69,17 @@ export function MarketingHero() {
           </Button>
         </motion.div>
 
-        <motion.p
+        <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.4, delay: 0.7 }}
-          className="mt-8 font-mono text-xs text-muted-foreground/70"
+          className="relative mt-8 overflow-hidden rounded-md border border-border/60 bg-card/40 px-4 py-2"
         >
-          <BootLine text="$ initializing recon on your target..." />
-        </motion.p>
+          <BorderBeam size={120} duration={6} colorFrom="var(--color-primary)" colorTo="transparent" />
+          <p className="font-mono text-xs text-muted-foreground/70">
+            <BootLine text="$ initializing recon on your target..." />
+          </p>
+        </motion.div>
       </div>
     </section>
   );

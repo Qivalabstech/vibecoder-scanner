@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Check } from "lucide-react";
+import { BorderBeam } from "@/components/ui/border-beam";
 
 export function PricingTeaser({ proPriceUsd }: { proPriceUsd: number }) {
   const tiers = [
@@ -38,8 +39,15 @@ export function PricingTeaser({ proPriceUsd }: { proPriceUsd: number }) {
         {tiers.map((tier) => (
           <Card
             key={tier.name}
-            className={tier.featured ? "border-primary/60 bg-card shadow-lg shadow-primary/10" : "border-border/70 bg-card/60"}
+            className={
+              tier.featured
+                ? "relative overflow-hidden border-primary/60 bg-card shadow-lg shadow-primary/10"
+                : "border-border/70 bg-card/60"
+            }
           >
+            {tier.featured && (
+              <BorderBeam size={140} duration={10} colorFrom="var(--color-primary)" colorTo="transparent" />
+            )}
             <CardHeader>
               <CardTitle className="flex items-baseline gap-1 text-xl">
                 {tier.name}

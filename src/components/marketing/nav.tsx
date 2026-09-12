@@ -1,8 +1,14 @@
+"use client";
+
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ShieldHalf } from "lucide-react";
 
 export function MarketingNav() {
+  const navRef = useRef<HTMLDivElement>(null);
+  const [spotlightX, setSpotlightX] = useState<number | null>(null);
+
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-md">
       {/* status strip — the "this is a console" tell before anything else loads */}
@@ -17,7 +23,23 @@ export function MarketingNav() {
           <ShieldHalf className="size-5 text-primary" strokeWidth={1.75} />
           <span>HAKSCAN</span>
         </Link>
-        <nav className="hidden items-center gap-8 font-heading text-xs tracking-wide text-muted-foreground md:flex">
+        <nav
+          ref={navRef}
+          onMouseMove={(e) => {
+            const rect = navRef.current?.getBoundingClientRect();
+            if (rect) setSpotlightX(e.clientX - rect.left);
+          }}
+          onMouseLeave={() => setSpotlightX(null)}
+          className="relative hidden items-center gap-8 rounded-full font-heading text-xs tracking-wide text-muted-foreground md:flex"
+        >
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-x-0 bottom-0 h-px transition-opacity duration-300"
+            style={{
+              opacity: spotlightX === null ? 0 : 1,
+              background: `radial-gradient(80px circle at ${spotlightX ?? 0}px 0%, var(--color-primary) 0%, transparent 70%)`,
+            }}
+          />
           <Link href="#how-it-works" className="hover:text-primary transition-colors">
             [ HOW_IT_WORKS ]
           </Link>

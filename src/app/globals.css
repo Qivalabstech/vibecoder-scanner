@@ -219,3 +219,34 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* GlowBorderCard's rotating conic gradient — the registry component ships
+   the CSS-variable colors but not the keyframes that animate them. */
+@property --glow-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+.glow-conic {
+  background: conic-gradient(
+    from var(--glow-angle),
+    var(--glow-color-1),
+    var(--glow-color-2),
+    var(--glow-color-3),
+    var(--glow-color-4),
+    var(--glow-color-5),
+    var(--glow-color-6),
+    var(--glow-color-7),
+    var(--glow-color-8),
+    var(--glow-color-9),
+    var(--glow-color-10)
+  );
+  animation: glow-rotate var(--glow-animation-duration, 4s) linear infinite;
+}
+
+@keyframes glow-rotate {
+  to {
+    --glow-angle: 360deg;
+  }
+}
