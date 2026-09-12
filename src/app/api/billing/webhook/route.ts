@@ -1,49 +1,57 @@
 import { NextResponse } from "next/server";
-import { Razorpay } from "@/lib/razorpay";
+import { verifyPaypalWebhookSignature } from "@/lib/paypal";
 import { createServiceClient } from "@/lib/supabase/service";
 import { logAudit } from "@/lib/audit";
 
-interface RazorpaySubscriptionEntity {
+interface PaypalSubscriptionResource {
   id: string;
   status: string;
-  customer_id: string | null;
-  current_end: number | null; // unix seconds
+  custom_id?: string;
+  subscriber?: { payer_id?: string };
+  billing_info?: { next_billing_time?: string };
 }
 
-interface RazorpayWebhookPayload {
-  event: string;
-  payload: {
-    subscription?: { entity: RazorpaySubscriptionEntity };
-  };
+interface PaypalWebhookPayload {
+  event_type: string;
+  resource: PaypalSubscriptionResource;
 }
 
-const ACTIVE_STATUSES = new Set(["activated", "charged"]);
+const ACTIVE_EVENTS = new Set(["BILLING.SUBSCRIPTION.ACTIVATED", "PAYMENT.SALE.COMPLETED"]);
 const INACTIVE_EVENTS = new Set([
-  "subscription.cancelled",
-  "subscription.completed",
-  "subscription.halted",
-  "subscription.expired",
+  "BILLING.SUBSCRIPTION.CANCELLED",
+  "BILLING.SUBSCRIPTION.EXPIRED",
+  "BILLING.SUBSCRIPTION.SUSPENDED",
 ]);
 
 export async function POST(request: Request) {
-  const rawBody = await request.text();
-  const signature = request.headers.get("x-razorpay-signature");
-  const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
-
-  if (!secret || !signature) {
+  if (!process.env.PAYPAL_WEBHOOK_ID || !process.env.PAYPAL_CLIENT_ID || !process.env.PAYPAL_CLIENT_SECRET) {
     return NextResponse.json({ error: "webhook_not_configured" }, { status: 503 });
   }
 
-  const valid = Razorpay.validateWebhookSignature(rawBody, signature, secret);
+  // Signature verification needs the exact raw bytes PayPal sent —
+  // parsing first would let whitespace/key-order differences break it.
+  const rawBody = await request.text();
+
+  const valid = await verifyPaypalWebhookSignature(
+    {
+      transmissionId: request.headers.get("paypal-transmission-id"),
+      transmissionTime: request.headers.get("paypal-transmission-time"),
+      certUrl: request.headers.get("paypal-cert-url"),
+      authAlgo: request.headers.get("paypal-auth-algo"),
+      transmissionSig: request.headers.get("paypal-transmission-sig"),
+    },
+    rawBody
+  );
+
   if (!valid) {
     return NextResponse.json({ error: "invalid_signature" }, { status: 400 });
   }
 
-  const body = JSON.parse(rawBody) as RazorpayWebhookPayload;
-  const subscriptionEntity = body.payload.subscription?.entity;
+  const body = JSON.parse(rawBody) as PaypalWebhookPayload;
+  const subscriptionId = body.resource?.id;
 
-  if (!subscriptionEntity) {
-    // Not a subscription-lifecycle event (e.g. a bare payment.* event) — nothing to do.
+  if (!subscriptionId) {
+    // Not a subscription-lifecycle event — nothing to do.
     return NextResponse.json({ received: true });
   }
 
@@ -51,32 +59,28 @@ export async function POST(request: Request) {
   const { data: profile } = await service
     .from("users")
     .select("id")
-    .eq("razorpay_subscription_id", subscriptionEntity.id)
+    .eq("paypal_subscription_id", subscriptionId)
     .maybeSingle();
 
   if (!profile) {
-    // Webhook for a subscription we don't recognize — log and move on rather
-    // than 500ing, so Razorpay doesn't retry forever.
     await logAudit({
       userId: null,
       action: "billing.webhook.unknown_subscription",
-      metadata: { event: body.event, subscriptionId: subscriptionEntity.id },
+      metadata: { event: body.event_type, subscriptionId },
     });
     return NextResponse.json({ received: true });
   }
 
-  if (ACTIVE_STATUSES.has(subscriptionEntity.status) || body.event === "subscription.charged") {
+  if (ACTIVE_EVENTS.has(body.event_type)) {
     await service
       .from("users")
       .update({
         plan: "paid",
-        razorpay_customer_id: subscriptionEntity.customer_id,
-        plan_renews_at: subscriptionEntity.current_end
-          ? new Date(subscriptionEntity.current_end * 1000).toISOString()
-          : null,
+        paypal_payer_id: body.resource.subscriber?.payer_id ?? null,
+        plan_renews_at: body.resource.billing_info?.next_billing_time ?? null,
       })
       .eq("id", profile.id);
-  } else if (INACTIVE_EVENTS.has(body.event)) {
+  } else if (INACTIVE_EVENTS.has(body.event_type)) {
     await service
       .from("users")
       .update({ plan: "free", plan_renews_at: null })
@@ -86,7 +90,7 @@ export async function POST(request: Request) {
   await logAudit({
     userId: profile.id,
     action: "billing.webhook.processed",
-    metadata: { event: body.event, subscriptionId: subscriptionEntity.id, status: subscriptionEntity.status },
+    metadata: { event: body.event_type, subscriptionId, status: body.resource.status },
   });
 
   return NextResponse.json({ received: true });

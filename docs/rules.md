@@ -57,7 +57,7 @@
 - Don't add a fourth Supabase client or a raw `createClient()` call outside
   `src/lib/supabase/*` — every route/component should import one of the
   three existing wrappers.
-- Don't write to `targets.verified*` or `users.plan`/`razorpay_*` from the
+- Don't write to `targets.verified*` or `users.plan`/`paypal_*` from the
   RLS-scoped client — migration `0005` blocks it at the database level
   regardless, so it will fail; use the service-role client.
 - Don't trust the client's selection/input for anything security-relevant.
@@ -99,17 +99,21 @@
   by widening what `0007` already locked down.
 - **`src/proxy.ts`'s `PROTECTED_PREFIXES`**, especially the explicit
   exclusion of `/api/billing/webhook` (must stay reachable unauthenticated —
-  Razorpay's servers call it directly and it verifies itself via HMAC
-  signature) versus `/api/billing/subscribe` and `/cancel` (must stay
-  auth-gated).
+  PayPal's servers call it directly and it verifies itself by round-tripping
+  through PayPal's own signature-verification API) versus
+  `/api/billing/subscribe` and `/cancel` (must stay auth-gated).
 - **Anything in `worker/scanners/*` that changes ZAP's scan mode** away from
   baseline/passive, or that adds `--network` access beyond what's currently
   granted (Semgrep's registry-fetch exception is deliberate and documented
   inline; don't extend the pattern casually).
-- **The Razorpay webhook signature check** (`Razorpay.validateWebhookSignature`
-  in `src/app/api/billing/webhook/route.ts`) and the requirement to read the
-  **raw** request body (`request.text()`) before parsing — parsing first
-  breaks signature verification.
+- **The PayPal webhook signature check** (`verifyPaypalWebhookSignature` in
+  `src/lib/paypal.ts`, called from `src/app/api/billing/webhook/route.ts`)
+  and the requirement to read the **raw** request body (`request.text()`)
+  before parsing — parsing first breaks signature verification. Unlike
+  Razorpay's local HMAC check, this one round-trips to PayPal's own
+  `/v1/notifications/verify-webhook-signature` endpoint, so it also needs
+  `PAYPAL_CLIENT_ID`/`PAYPAL_CLIENT_SECRET` (to get an access token) in
+  addition to `PAYPAL_WEBHOOK_ID`.
 - **`src/lib/rate-limit.ts`'s scan-trigger limit** — exists specifically so
   the platform can't be used as a scanning proxy against arbitrary targets;
   raising or removing it is a product/legal decision, not a perf tweak.
@@ -130,11 +134,19 @@
   don't rely on the `(admin)/admin` layout's redirect alone, since API
   routes are reachable directly.
 - **`pricing_config`** only controls the *displayed* Pro price on the
-  marketing page — it has no connection to what Razorpay actually
-  charges (`RAZORPAY_PLAN_ID`'s plan). Don't let the two drift without
-  telling the user; the admin pricing page's warning banner explaining
-  this is load-bearing copy, not decoration. As of migration `0009`, the
-  column is `pro_price_usd` (USD, not INR) — billing in USD for real
-  additionally requires Razorpay International/multi-currency enabled on
-  the merchant account, which is a Razorpay-dashboard KYC step, not
-  something a migration or env var can turn on.
+  marketing page — it has no connection to what PayPal actually charges
+  (`PAYPAL_PLAN_ID`'s plan). Don't let the two drift without telling the
+  user; the admin pricing page's warning banner explaining this is
+  load-bearing copy, not decoration. As of migration `0009`, the column is
+  `pro_price_usd` (USD, not INR) — PayPal bills USD natively, so (unlike
+  the earlier Razorpay setup) there's no merchant-account currency gate to
+  clear first, just real `PAYPAL_*` credentials.
+- **Billing provider is PayPal, not Razorpay, as of migration `0010`.**
+  `users.paypal_subscription_id`/`paypal_payer_id` replaced
+  `razorpay_customer_id`/`razorpay_subscription_id` (dropped in the same
+  migration — confirmed zero live subscribers before dropping). PayPal has
+  no "cancel at cycle end": `POST /api/billing/cancel` downgrades the user
+  to `free` immediately, unlike the old Razorpay flow which let a
+  cancelled sub run out its paid period. Don't reintroduce a deferred-
+  cancellation UX without also solving how to stop PayPal from billing
+  again in the meantime — the two have to change together.

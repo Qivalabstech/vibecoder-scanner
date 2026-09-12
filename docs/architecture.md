@@ -12,7 +12,8 @@
 - `@anthropic-ai/sdk` (`claude-opus-5`, structured outputs via
   `messages.parse()` + Zod) for findings triage
 - `@react-pdf/renderer` (PDF reports), Resend (email)
-- `razorpay` (Node SDK) for subscriptions + webhook signature verification
+- PayPal REST API (fetch-based, no SDK — `src/lib/paypal.ts`) for
+  subscriptions + webhook signature verification
 
 ## Two runtimes, one database
 
@@ -118,7 +119,7 @@ src/
     verification.ts — DNS TXT / meta-tag challenge generation + checks
     audit.ts        — audit_log writer
     rate-limit.ts   — 5 scans/hour/user
-    razorpay.ts     — Razorpay client + subscription constants
+    paypal.ts       — PayPal REST client (token, subscriptions, webhook verify)
     severity.ts     — shared severity ordering/labels/colors
     pdf-report.tsx  — @react-pdf/renderer document
     parse-steps.ts  — splits an AI fix suggestion into numbered steps
@@ -132,9 +133,11 @@ supabase/migrations/
   0001_init.sql                    — users/targets/scans/findings/audit_log + RLS
   0002_github_connections.sql      — stored OAuth token for repo listing
   0003_scheduled_scans.sql         — targets.scan_frequency
-  0004_billing.sql                 — users.razorpay_*, plan_renews_at
+  0004_billing.sql                 — users.razorpay_* (superseded by 0010), plan_renews_at
   0005_lock_down_client_writes.sql — column-level REVOKE (see rules.md)
   0008_pricing_config.sql         — editable *display* Pro price, public SELECT only
+  0009_pricing_usd.sql            — pricing_config switched from INR to USD
+  0010_paypal_billing.sql         — users.paypal_* replacing users.razorpay_*
 docker-compose.yml   — local Redis only; Docker itself must be installed separately
 ```
 
@@ -152,7 +155,7 @@ docker-compose.yml   — local Redis only; Docker itself must be installed separ
   `0007`, is `UPDATE (scan_frequency)` on `targets` (a user preference, not
   a security boundary). Target creation (`verified`, `authorization_attested`
   at insert time), the `verified` flag, scan creation and status, findings,
-  `audit_log`, `github_connections`, and `users.plan`/`razorpay_*` are all
+  `audit_log`, `github_connections`, and `users.plan`/`paypal_*` are all
   written exclusively through the service-role client from server-validated
   route code. See `memory.md`'s 2026-08-28/30 entries for how this was
   found — the short version: it wasn't found by review, it was found by
@@ -173,9 +176,14 @@ docker-compose.yml   — local Redis only; Docker itself must be installed separ
   than failing the scan — same pattern for missing `RESEND_API_KEY`. An
   unreachable Redis at scan-trigger time is the one case that does fail
   loudly (scan marked `failed` immediately, not left `queued` forever).
-- **Razorpay subscriptions require a finite `total_count`**; there's no
-  native "until cancelled." `SUBSCRIPTION_TOTAL_COUNT = 120` (10 years) is
-  the stand-in — cancellation is a separate explicit action either way.
+- **PayPal has no "cancel at cycle end."** Cancelling a subscription with
+  PayPal stops future billing immediately, so `POST /api/billing/cancel`
+  downgrades the user to `free` immediately too, rather than letting a
+  paid period run out (which the earlier Razorpay integration did). The
+  alternative — telling PayPal to cancel now but keeping the DB on `paid`
+  until the old renewal date — was rejected: PayPal won't bill again after
+  cancelling, so that would just extend free access with no payment behind
+  it.
 - **RLS policies are necessary but not sufficient — every table also needs
   explicit, table-level-REVOKE-first `GRANT`s.** Postgres checks table-level
   privilege *before* RLS ever runs, and — this is the part that took two

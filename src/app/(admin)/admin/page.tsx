@@ -64,7 +64,7 @@ export default async function AdminOverviewPage() {
         <StatCard
           label="Est. MRR"
           value={`$${estimatedMrr.toLocaleString("en-US")}`}
-          hint={`${paidUsers.length} × $${proPrice.toLocaleString("en-US")} — estimate, not a Razorpay ledger total`}
+          hint={`${paidUsers.length} × $${proPrice.toLocaleString("en-US")} — estimate, not a PayPal ledger total`}
         />
       </div>
 

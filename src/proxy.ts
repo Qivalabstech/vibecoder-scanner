@@ -13,8 +13,9 @@ const PROTECTED_PREFIXES = [
   "/api/billing/subscribe",
   "/api/billing/cancel",
   "/api/admin",
-  // NOT /api/billing/webhook — Razorpay's servers call it unauthenticated;
-  // it verifies the request itself via HMAC signature instead.
+  // NOT /api/billing/webhook — PayPal's servers call it unauthenticated;
+  // it verifies the request itself via PayPal's signature-verification
+  // API instead.
 ];
 
 export async function proxy(request: NextRequest) {

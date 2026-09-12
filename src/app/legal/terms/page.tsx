@@ -75,7 +75,7 @@ export default function TermsPage() {
         Supabase (database, authentication), Anthropic (the Claude API, to
         analyze and explain scan findings), GitHub (OAuth and repository
         access for repos you add), Resend (transactional email), and
-        Razorpay (payment processing for paid plans). Each processes data
+        PayPal (payment processing for paid plans). Each processes data
         under its own terms and privacy policy. We send only what each
         integration needs to function, not your full account data.
       </p>
@@ -83,12 +83,12 @@ export default function TermsPage() {
       <h2 className="mt-8 text-xl font-semibold">8. Billing and subscriptions</h2>
       <p className="text-muted-foreground">
         The free plan is limited to one target and manual scans. Paid plans
-        are billed on a recurring basis through Razorpay and grant
+        are billed on a recurring basis through PayPal and grant
         unlimited targets, scheduled scans, priority scanning, and full
-        PDF reports and email alerts. You can cancel at any time; a
-        cancellation takes effect at the end of the current billing period
-        rather than immediately. We do not currently offer refunds for
-        partial billing periods.
+        PDF reports and email alerts. You can cancel at any time;
+        cancellation takes effect immediately and ends paid features right
+        away rather than at the end of the billing period. We do not
+        currently offer refunds for partial billing periods.
       </p>
 
       <h2 className="mt-8 text-xl font-semibold">9. Data retention</h2>

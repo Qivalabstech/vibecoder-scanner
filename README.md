@@ -3,7 +3,7 @@
 Security scanning platform for indie founders building with AI. **Phases
 0–8 are all built**: design system, auth, the ownership verification gate,
 the Docker-sandboxed scan workers, the Claude AI-analysis layer, the
-findings dashboard, reports/notifications, Razorpay billing, and legal +
+findings dashboard, reports/notifications, PayPal billing, and legal +
 safety guardrails. The one thing that genuinely can't be finished by an AI
 session is real legal sign-off on the Terms of Service — see `docs/phases.md`
 and the note at the bottom of this file.
@@ -14,7 +14,7 @@ Next.js 16 (App Router) · TypeScript · Tailwind v4 · shadcn/ui (Base UI) ·
 Supabase (Postgres + Auth) · Framer Motion · React Three Fiber · BullMQ +
 Redis (queue) · Docker (Semgrep / Gitleaks / OWASP ZAP baseline) · Claude API
 (`@anthropic-ai/sdk`, findings triage) · `@react-pdf/renderer` (reports) ·
-Resend (scan-complete emails) · Razorpay (subscriptions)
+Resend (scan-complete emails) · PayPal (subscriptions)
 
 > This Next.js version has real breaking changes vs. older docs/training data
 > — `middleware.ts` is now `src/proxy.ts`, route params are async, etc. See
@@ -86,10 +86,12 @@ supabase.com project.
      scans still complete with raw (unanalyzed) findings — see below
    - `RESEND_API_KEY` / `RESEND_FROM_EMAIL` — needed for scan-complete
      emails; if unset, scans still complete, just silently without an email
-   - `RAZORPAY_KEY_ID` / `RAZORPAY_KEY_SECRET` / `RAZORPAY_WEBHOOK_SECRET` /
-     `NEXT_PUBLIC_RAZORPAY_KEY_ID` — from your Razorpay dashboard
-   - `RAZORPAY_PLAN_ID` — a Plan you create yourself in the Razorpay
-     Dashboard (Subscriptions → Plans); this app doesn't create one for you
+   - `PAYPAL_CLIENT_ID` / `PAYPAL_CLIENT_SECRET` / `PAYPAL_WEBHOOK_ID` /
+     `NEXT_PUBLIC_PAYPAL_CLIENT_ID` — from your PayPal developer app
+   - `PAYPAL_PLAN_ID` — a Product + Plan you create yourself in the PayPal
+     developer dashboard (Products & Plans); this app doesn't create one
+     for you
+   - `PAYPAL_ENV` — `sandbox` while testing, unset (or `live`) in production
    - `ADMIN_EMAIL` — where abuse-monitor alerts go; if unset, flagged users
      still get written to `audit_log`, nobody just gets paged about it
 ### Then, either way
@@ -186,19 +188,23 @@ supabase.com project.
     pre-existing `scans` row — the worker creates one itself, re-checking
     both `target.verified` and the user's plan (self-cancelling the
     scheduler if it's lapsed) before running.
-- **Billing (Razorpay)**:
+- **Billing (PayPal)**:
   - `UpgradeButton` (`/settings/billing`) calls `POST /api/billing/subscribe`,
-    which creates a Razorpay subscription and returns just enough for the
-    client to open Razorpay's Checkout.js — the subscription starts
-    unattached to a customer until checkout completes, that's how Razorpay's
-    flow works, not something this app orchestrates.
+    which creates a PayPal subscription server-side and returns just
+    enough (`subscriptionId`, `clientId`) for the client to render PayPal's
+    own JS SDK Buttons component and approve it — there's no custom-modal
+    equivalent to a Checkout.js-style flow for PayPal subscriptions.
   - `POST /api/billing/webhook` is the actual source of truth for plan
-    state, not the client callback: HMAC-signature-verified
-    (`Razorpay.validateWebhookSignature` against the **raw** request body),
-    `activated`/`charged` → `plan: "paid"`, `cancelled`/`completed`/
-    `halted`/`expired` → `plan: "free"`.
-  - `POST /api/billing/cancel` cancels at the end of the current billing
-    cycle rather than immediately.
+    state, not the client callback: signature-verified by round-tripping
+    the transmission headers + raw body to PayPal's own
+    `/v1/notifications/verify-webhook-signature` endpoint (see
+    `src/lib/paypal.ts`), `BILLING.SUBSCRIPTION.ACTIVATED`/
+    `PAYMENT.SALE.COMPLETED` → `plan: "paid"`, `.CANCELLED`/`.EXPIRED`/
+    `.SUSPENDED` → `plan: "free"`.
+  - `POST /api/billing/cancel` cancels **immediately** — PayPal has no
+    "cancel at cycle end," so unlike the earlier Razorpay integration, a
+    cancelled user drops to `free` right away rather than at the end of
+    the billing period.
   - **Nothing is client-writable at the database level except one narrow
     column** (`targets.scan_frequency`) — see
     `supabase/migrations/0007_lock_down_all_client_writes.sql` and
@@ -249,4 +255,4 @@ written and rendered → a real generated PDF report, with AI analysis
 correctly degrading (no key configured) rather than blocking the scan.
 Still unverified: the repo-scan path (Semgrep/Gitleaks + GitHub OAuth —
 needs a real GitHub OAuth App and a repo to scan), and the Claude/Resend/
-Razorpay integrations (no real API keys available during testing).
+PayPal integrations (no real API keys available during testing).

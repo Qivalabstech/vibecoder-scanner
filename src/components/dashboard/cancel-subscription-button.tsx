@@ -19,7 +19,7 @@ export function CancelSubscriptionButton() {
       toast.error(json.message ?? "Couldn't cancel subscription");
       return;
     }
-    toast.success(json.message ?? "Subscription set to cancel");
+    toast.success(json.message ?? "Subscription cancelled");
     router.refresh();
   }
 

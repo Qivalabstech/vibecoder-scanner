@@ -33,7 +33,7 @@ on — not a wall of scanner jargon.
   email on scan completion/failure; optional weekly/monthly re-scans.
 - **Billing**: free tier (1 target, manual scans only) vs. paid tier
   (unlimited targets, scheduled scans, priority queue, full reports/alerts),
-  via Razorpay subscriptions.
+  via PayPal subscriptions (USD).
 - **Legal/safety guardrails**: per-target authorization attestation, passive-
   only site scanning, per-user scan rate limiting, an audit log of every
   scan/verification event.
@@ -44,8 +44,9 @@ on — not a wall of scanner jargon.
   the target — the platform is intentionally passive/baseline-only.
 - Scanning targets the user hasn't verified ownership of, under any
   circumstance — this is enforced, not just discouraged.
-- A Stripe/other-payment-provider path — Razorpay is the only billing
-  integration built.
+- A Stripe/other-payment-provider path — PayPal is the only billing
+  integration built (Razorpay was the original choice; switched to PayPal
+  2026-09-12 to bill in USD without a merchant-account currency gate).
 - Team/org accounts, seats, or shared targets — every target belongs to
   exactly one user.
 - A customer-facing subscription-management portal beyond upgrade/cancel —
@@ -61,6 +62,6 @@ on — not a wall of scanner jargon.
   on without needing to open "technical details."
 - A free-tier user is capped at 1 target and manual scans; a Pro user isn't,
   and can turn on scheduling and get PDF reports + email alerts.
-- Upgrading actually flips billing state via Razorpay webhook (not a client
+- Upgrading actually flips billing state via PayPal webhook (not a client
   call the user could spoof), and downgrading/cancelling stops paid
   features from working, including previously-scheduled re-scans.

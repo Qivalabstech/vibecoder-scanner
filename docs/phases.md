@@ -106,25 +106,35 @@ don't let it drift into a forward-only plan.
       skip path was exercised by omission, not the send path itself)
 - [x] Scheduled re-scans (weekly/monthly), gated to paid plans
 
-## Phase 7 — Billing (Razorpay) ✅
+## Phase 7 — Billing (PayPal) ✅
 
 - [x] **2026-09-12**: verified live — upgrade flow correctly returns
       "Billing isn't configured yet." (503, no crash) with `RAZORPAY_*`
       unset. Displayed Pro price switched from INR to USD
-      (`pricing_config.pro_price_usd`, migration `0009`); real USD
-      billing still needs Razorpay International enabled on the merchant
-      account plus a USD `RAZORPAY_PLAN_ID` before this matters.
+      (`pricing_config.pro_price_usd`, migration `0009`).
+- [x] **2026-09-12 (later same day)**: billing provider switched from
+      Razorpay to PayPal at the user's request (PayPal bills USD natively,
+      side-stepping the Razorpay-International KYC gate). New
+      `src/lib/paypal.ts` (fetch-based REST client, no SDK); migration
+      `0010` replaces `users.razorpay_*` with `paypal_subscription_id`/
+      `paypal_payer_id` (confirmed zero live subscribers before dropping
+      the old columns). Real end-to-end checkout still can't be tested —
+      no `PAYPAL_*` credentials exist yet, same gap Razorpay had.
 
 - [x] Free tier: 1 target, manual scan only (enforced server-side in
       `POST /api/targets`)
 - [x] Paid tier: unlimited targets, scheduled scans, full PDF
       reports/email alerts — the scheduling and target-limit gates already
       existed from Phases 5–6; Phase 7 wired the actual plan flip
-- [x] Razorpay subscription creation + Checkout.js integration
-      (`UpgradeButton`)
-- [x] Webhook handling (`activated`/`charged` → paid, `cancelled`/
-      `completed`/`halted`/`expired` → free), HMAC-verified
-- [x] Cancel flow (`cancel_at_cycle_end`, doesn't yank access mid-period)
+- [x] PayPal subscription creation + JS SDK Buttons integration
+      (`UpgradeButton` — PayPal's own hosted button, not a custom modal)
+- [x] Webhook handling (`BILLING.SUBSCRIPTION.ACTIVATED`/
+      `PAYMENT.SALE.COMPLETED` → paid, `.CANCELLED`/`.EXPIRED`/`.SUSPENDED`
+      → free), verified via PayPal's signature-verification API
+- [x] Cancel flow — **immediate**, not deferred: PayPal has no "cancel at
+      cycle end," so cancelling downgrades the user to `free` right away
+      (a real behavior change from the old Razorpay flow, see
+      `rules.md`/`architecture.md`)
 - [x] Priority scan queue: paid-user jobs are enqueued unprioritized
       (BullMQ's fast lane — unprioritized jobs run before any explicitly
       prioritized one), free-user jobs get an explicit low priority
@@ -147,7 +157,7 @@ don't let it drift into a forward-only plan.
 - [x] Terms of Service expanded to a full draft (`src/app/legal/terms/page.tsx`)
       covering acceptance, service description, account eligibility, scan
       authorization, scope of scanning, prohibited uses, third-party
-      services (Supabase/Anthropic/GitHub/Resend/Razorpay), billing,
+      services (Supabase/Anthropic/GitHub/Resend/PayPal), billing,
       data retention, warranty disclaimer, liability limitation,
       termination, governing law, and contact
 - [ ] **Not actually done, and can't be by an AI**: sign-off from qualified
@@ -168,15 +178,15 @@ don't let it drift into a forward-only plan.
       protect a directly-hit API route.
 - [x] Overview page: total/free/paid user counts, estimated MRR (paid
       count × the editable display price, explicitly labeled as an
-      estimate, not a Razorpay ledger total), verified-target and scan
+      estimate, not a PayPal ledger total), verified-target and scan
       counts by status, a real user table, and a real `audit_log`-backed
       activity/health feed (no synthetic/placeholder data anywhere on the
       page).
 - [x] Editable Pro-plan **display** price (`pricing_config` table,
-      migration `0008`) — the marketing page reads this value. Does not
-      and cannot change what Razorpay actually bills (that's the
-      `RAZORPAY_PLAN_ID`'s plan, immutable once created on Razorpay's
-      side) — the admin pricing page states this explicitly and gives the
+      migration `0008`, USD via `0009`) — the marketing page reads this
+      value. Does not and cannot change what PayPal actually bills (that's
+      the `PAYPAL_PLAN_ID`'s plan, effectively fixed once subscribers
+      exist) — the admin pricing page states this explicitly and gives the
       exact steps to change the real billed amount.
 - [x] Super admins bypass the free-tier 1-target limit
       (`POST /api/targets`), so the owner can connect and scan any number
