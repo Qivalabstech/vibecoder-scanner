@@ -88,11 +88,16 @@ src/
       targets/{page.tsx,new/page.tsx,[id]/page.tsx}
       scans/[id]/page.tsx
       settings/billing/page.tsx
+    (admin)/admin/
+      layout.tsx                    — auth-gates + isSuperAdminEmail()-gates
+      page.tsx                      — users/plan/MRR/scan-health overview
+      pricing/page.tsx               — edit the marketing page's display price
     api/
       targets/{route.ts,[id]/{scan,verify,schedule}/route.ts}
       github/repos/route.ts
       scans/[id]/report/route.tsx   — PDF stream
       billing/{subscribe,cancel,webhook}/route.ts
+      admin/pricing/route.ts        — re-checks isSuperAdminEmail() itself
     auth/callback/route.ts          — OAuth code exchange
     legal/terms/page.tsx
     page.tsx                        — marketing landing page
@@ -100,7 +105,8 @@ src/
   components/
     auth/       — login/signup forms, GitHub OAuth button, split-screen shell
     dashboard/  — target/finding/scan cards, scan trigger, schedule selector,
-                  billing buttons, sidebar
+                  billing buttons, sidebar, scan-progress-animation
+    admin/      — admin sidebar, pricing edit form
     marketing/  — landing page sections
     three/      — 3D scan-globe hero (lazy-loaded, reduced-motion fallback)
     ui/         — shadcn/ui primitives
@@ -115,6 +121,8 @@ src/
     razorpay.ts     — Razorpay client + subscription constants
     severity.ts     — shared severity ordering/labels/colors
     pdf-report.tsx  — @react-pdf/renderer document
+    parse-steps.ts  — splits an AI fix suggestion into numbered steps
+    admin.ts        — isSuperAdminEmail() env-allowlist check
   proxy.ts          — Next 16's middleware.ts replacement; auth gate + session refresh
 worker/
   index.ts                — BullMQ Worker, orchestrates one scan end-to-end
@@ -126,6 +134,7 @@ supabase/migrations/
   0003_scheduled_scans.sql         — targets.scan_frequency
   0004_billing.sql                 — users.razorpay_*, plan_renews_at
   0005_lock_down_client_writes.sql — column-level REVOKE (see rules.md)
+  0008_pricing_config.sql         — editable *display* Pro price, public SELECT only
 docker-compose.yml   — local Redis only; Docker itself must be installed separately
 ```
 

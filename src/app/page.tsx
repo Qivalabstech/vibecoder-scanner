@@ -2,15 +2,20 @@ import { MarketingNav } from "@/components/marketing/nav";
 import { MarketingHero } from "@/components/marketing/hero";
 import { HowItWorks } from "@/components/marketing/how-it-works";
 import { PricingTeaser } from "@/components/marketing/pricing-teaser";
+import { createClient } from "@/lib/supabase/server";
 
-export default function Home() {
+export default async function Home() {
+  const supabase = await createClient();
+  const { data: pricing } = await supabase.from("pricing_config").select("pro_price_inr").eq("id", 1).single();
+  const proPriceInr = pricing?.pro_price_inr ?? 1999;
+
   return (
     <>
       <MarketingNav />
       <main className="flex-1">
         <MarketingHero />
         <HowItWorks />
-        <PricingTeaser />
+        <PricingTeaser proPriceInr={proPriceInr} />
       </main>
       <footer className="border-t border-border/60 py-10">
         <div className="mx-auto max-w-6xl px-6 text-sm text-muted-foreground">

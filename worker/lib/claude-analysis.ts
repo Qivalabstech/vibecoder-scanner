@@ -17,7 +17,13 @@ const AnalysisSchema = z.object({
       explanation: z
         .string()
         .describe("plain-language business-impact explanation for a non-security-expert founder"),
-      fixSuggestion: z.string().describe("a concrete, specific code-level fix"),
+      fixSuggestion: z
+        .string()
+        .describe(
+          "a concrete, specific code-level fix, formatted as numbered steps " +
+            '("1. ...\\n2. ...\\n3. ...") the founder can follow in order — ' +
+            "not a single paragraph of advice"
+        ),
     })
   ),
 });
@@ -38,7 +44,9 @@ rather than risk hiding a real problem.
 raw tool's default.
 - Write explanation in plain language: what could actually go wrong, in terms of business impact (data \
 exposure, account takeover, financial loss), not jargon.
-- Write fixSuggestion as a specific, actionable code-level fix — not generic advice.
+- Write fixSuggestion as a numbered, ordered list of concrete steps ("1. ...\\n2. ...") the founder \
+can follow to actually resolve the issue — specific file/config/code-level actions, not generic advice, \
+and not a single unstructured paragraph.
 
 Return one assessment per input finding, in any order, each carrying the input finding's id unchanged.`;
 

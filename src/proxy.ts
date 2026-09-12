@@ -6,11 +6,13 @@ const PROTECTED_PREFIXES = [
   "/targets",
   "/scans",
   "/settings",
+  "/admin",
   "/api/targets",
   "/api/verify",
   "/api/scans",
   "/api/billing/subscribe",
   "/api/billing/cancel",
+  "/api/admin",
   // NOT /api/billing/webhook — Razorpay's servers call it unauthenticated;
   // it verifies the request itself via HMAC signature instead.
 ];

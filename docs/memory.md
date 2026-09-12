@@ -401,3 +401,65 @@ Nothing actively in progress.
   or the dedicated `find-animation-opportunities`/`improve-animations`
   skills separately — worth a follow-up if the user wants that level of
   rigor.
+
+- **2026-09-12 (later same day)** — Follow-up feedback: the scan-in-
+  progress animation looked fake ("repeating the same thing"), the PDF
+  report wasn't properly branded or actionable, and a super-admin/CRM
+  panel was requested. Shipped all three:
+
+  **Scan animation rebuilt from scratch.** The old version looped a fixed
+  set of log lines forever while a scan stayed `running`, which read as
+  obviously fake since it visibly repeated. Replaced with
+  `ScanProgressAnimation` (`src/components/dashboard/scan-progress-
+  animation.tsx`): a vertical stage tracker (4 stages, different copy for
+  repo vs site targets) that only ever moves forward, driven by real
+  elapsed time since the scan's actual `started_at` timestamp — not a
+  fake timer that restarts. A live elapsed-time counter ticks against
+  that same real timestamp. The active stage's pulse and the connecting-
+  line fill are CSS (`@keyframes scan-pulse` in `globals.css` +
+  `transition-colors`), not JS-animated per frame. Verified by flipping a
+  real scan to `running` with a `started_at` set 25s in the past via
+  trusted DB access, confirming the stage/timer both advanced correctly
+  over real wall-clock time, then reverting the scan to its real state.
+
+  **PDF report redesigned** (`src/lib/pdf-report.tsx`): fixed header
+  (brand mark + "VIBECODER SCANNER" + "Confidential security report") and
+  footer (company name, scan ID, real page-X-of-Y via `@react-pdf/
+  renderer`'s `render` prop) on every page, a proper cover section
+  (finding counts, critical+high count, scan type), and — the actual
+  "steps to clear the issues" ask — each finding's fix now renders as a
+  numbered step list via a new `parseFixSteps()` helper
+  (`src/lib/parse-steps.ts`), reused in the dashboard's `FindingCard` too.
+  Also updated `worker/lib/claude-analysis.ts`'s prompt to ask Claude for
+  numbered steps specifically, for future scans (existing findings in the
+  DB predate that prompt change and don't have `ai_fix_suggestion` set at
+  all, since this environment has no `ANTHROPIC_API_KEY` — the parser
+  still degrades fine for old free-text values once a key is added).
+  Verified by actually fetching a real report from the live dev server,
+  base64-decoding the response, and rendering it to PNG with `pdftoppm`
+  (installed via `brew install poppler` for this) to look at it — not
+  just checking the HTTP status.
+
+  **Super admin console added** (`/admin`, Phase 9 in `phases.md`).
+  Membership is `SUPER_ADMIN_EMAILS`, an env-var allowlist checked by
+  `isSuperAdminEmail()` — deliberately not a database column, to avoid
+  needing to solve "who can grant admin" as its own privilege-escalation
+  problem. New `pricing_config` table (migration `0008`, applied to the
+  live `bareloop` project) holds an admin-editable *display* price for
+  the marketing page; actual Razorpay billing is unaffected; the admin
+  pricing page says so explicitly and gives the exact steps to change the
+  real billed amount (Razorpay plans are immutable — make a new one,
+  point `RAZORPAY_PLAN_ID` at it). The overview page shows real counts
+  (total/free/paid users, verified targets, scans by status, a users
+  table, a real `audit_log`-backed activity feed) — no placeholder data.
+  Super admins bypass the free-tier 1-target limit in
+  `POST /api/targets`. Verified end to end locally: added
+  `waitji2026@outlook.com` to `SUPER_ADMIN_EMAILS`, confirmed the
+  overview page's numbers matched the real DB, changed the displayed
+  price to ₹2,499 through the admin UI and confirmed it appeared on the
+  live landing page, then reverted it to ₹1,999.
+
+  Not yet pushed to GitHub/Vercel as of writing this entry — do that next
+  and re-verify against production once deployed (the `pricing_config`
+  migration and `SUPER_ADMIN_EMAILS` env var both need to exist on
+  production too, not just local dev).

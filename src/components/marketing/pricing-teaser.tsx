@@ -3,31 +3,31 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Check } from "lucide-react";
 
-const tiers = [
-  {
-    name: "Free",
-    price: "₹0",
-    cadence: "forever",
-    features: ["1 target", "Manual scans", "Basic report"],
-    cta: "Start free",
-    featured: false,
-  },
-  {
-    name: "Pro",
-    price: "₹1,999",
-    cadence: "/mo",
-    features: [
-      "Unlimited targets",
-      "Scheduled scans",
-      "Priority scan queue",
-      "Full PDF reports + email alerts",
-    ],
-    cta: "Go Pro",
-    featured: true,
-  },
-];
+export function PricingTeaser({ proPriceInr }: { proPriceInr: number }) {
+  const tiers = [
+    {
+      name: "Free",
+      price: "₹0",
+      cadence: "forever",
+      features: ["1 target", "Manual scans", "Basic report"],
+      cta: "Start free",
+      featured: false,
+    },
+    {
+      name: "Pro",
+      price: `₹${proPriceInr.toLocaleString("en-IN")}`,
+      cadence: "/mo",
+      features: [
+        "Unlimited targets",
+        "Scheduled scans",
+        "Priority scan queue",
+        "Full PDF reports + email alerts",
+      ],
+      cta: "Go Pro",
+      featured: true,
+    },
+  ];
 
-export function PricingTeaser() {
   return (
     <section id="pricing" className="mx-auto max-w-4xl px-6 py-24">
       <div className="mx-auto mb-14 max-w-xl text-center">

@@ -147,7 +147,24 @@
   }
 }
 
+@keyframes scan-pulse {
+  0%,
+  100% {
+    transform: scale(0.85);
+    opacity: 0.6;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 1;
+  }
+}
+
 @layer utilities {
+  .animate-scan-pulse {
+    animation: scan-pulse 1.1s ease-in-out infinite;
+  }
+
+
   /* the signature texture: a faint CRT scanline sweep over the console
      chrome. Kept to ~2-4% opacity so it reads as "operator terminal" at a
      glance without ever fighting body-copy legibility. */

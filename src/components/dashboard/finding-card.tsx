@@ -6,6 +6,7 @@ import { ChevronDown, Wrench, Code2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { SeverityBadge } from "@/components/dashboard/severity-badge";
 import type { Severity } from "@/lib/severity";
+import { parseFixSteps } from "@/lib/parse-steps";
 import { cn } from "@/lib/utils";
 
 export interface FindingRow {
@@ -63,11 +64,20 @@ export function FindingCard({ finding }: { finding: FindingRow }) {
 
             {finding.ai_fix_suggestion && (
               <div>
-                <p className="mb-1 flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                <p className="mb-2 flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   <Wrench className="size-3.5" />
-                  Suggested fix
+                  Steps to fix this
                 </p>
-                <p className="whitespace-pre-wrap text-sm leading-relaxed">{finding.ai_fix_suggestion}</p>
+                <ol className="space-y-2">
+                  {parseFixSteps(finding.ai_fix_suggestion).map((step, i) => (
+                    <li key={i} className="flex gap-2.5 text-sm leading-relaxed">
+                      <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-primary/15 font-heading text-[11px] text-primary">
+                        {i + 1}
+                      </span>
+                      <span className="whitespace-pre-wrap">{step}</span>
+                    </li>
+                  ))}
+                </ol>
               </div>
             )}
 

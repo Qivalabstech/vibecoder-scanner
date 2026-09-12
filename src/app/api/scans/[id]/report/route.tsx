@@ -35,8 +35,8 @@ export async function GET(_request: Request, ctx: RouteContext<"/api/scans/[id]/
         targetType: target?.type ?? "site",
         scanId: scan.id,
         scanDate: new Date(scan.completed_at ?? scan.created_at).toLocaleString(),
-        findings: (findings as ReportFinding[] | null) ?? [],
       }}
+      findings={(findings as ReportFinding[] | null) ?? []}
     />
   );
 

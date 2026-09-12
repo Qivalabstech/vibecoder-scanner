@@ -93,6 +93,14 @@ don't let it drift into a forward-only plan.
       full findings appendix — **verified with a real completed scan**
       (2026-09-01): `GET /api/scans/[id]/report` returned a real, valid
       `application/pdf` blob.
+- [x] **2026-09-12**: PDF redesigned for real branding and usability —
+      fixed header/footer on every page (logo mark, "VIBECODER SCANNER",
+      "Confidential security report", page X of Y), a proper cover section
+      (finding counts, critical+high count, scan type), and each finding's
+      fix rendered as a numbered step list (`parseFixSteps()` in
+      `src/lib/parse-steps.ts`) instead of a single paragraph — re-verified
+      by actually rendering a real report to PNG and reviewing it, not just
+      checking the response status.
 - [x] Email on scan complete/failed (Resend), best-effort — still
       unverified (no `RESEND_API_KEY` in this environment; the graceful-
       skip path was exercised by omission, not the send path itself)
@@ -140,6 +148,32 @@ don't let it drift into a forward-only plan.
       review" banner rather than presenting as final — do not remove that
       banner without an actual lawyer's review. Governing law and contact
       details are explicit placeholders in the copy itself.
+
+## Phase 9 — Super admin console ✅
+
+- [x] Super-admin membership via `SUPER_ADMIN_EMAILS` env allowlist
+      (`src/lib/admin.ts`), not a database column or in-app grant flow —
+      deliberately, to avoid a privilege-escalation surface (see
+      `rules.md`).
+- [x] `/admin` route group (`src/app/(admin)/admin/`), gated in the layout
+      (redirect non-admins to `/dashboard`) **and independently re-checked
+      in every `/api/admin/*` route** — the layout check alone doesn't
+      protect a directly-hit API route.
+- [x] Overview page: total/free/paid user counts, estimated MRR (paid
+      count × the editable display price, explicitly labeled as an
+      estimate, not a Razorpay ledger total), verified-target and scan
+      counts by status, a real user table, and a real `audit_log`-backed
+      activity/health feed (no synthetic/placeholder data anywhere on the
+      page).
+- [x] Editable Pro-plan **display** price (`pricing_config` table,
+      migration `0008`) — the marketing page reads this value. Does not
+      and cannot change what Razorpay actually bills (that's the
+      `RAZORPAY_PLAN_ID`'s plan, immutable once created on Razorpay's
+      side) — the admin pricing page states this explicitly and gives the
+      exact steps to change the real billed amount.
+- [x] Super admins bypass the free-tier 1-target limit
+      (`POST /api/targets`), so the owner can connect and scan any number
+      of repos without needing a paid plan.
 
 ## Not started
 

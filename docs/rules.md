@@ -121,3 +121,16 @@
 - **`worker/lib/abuse-monitor.ts`'s `THRESHOLD`/`WINDOW_MS`** — tune with
   real usage data, not a guess; too low pages a human for normal user
   error (a mistyped DNS record), too high misses real probing.
+- **`SUPER_ADMIN_EMAILS` / `src/lib/admin.ts`'s `isSuperAdminEmail()`** —
+  this is intentionally an env-var allowlist, not a database column or
+  any in-app "make me admin" action. Don't add a DB-backed admin flag
+  without re-deriving the same privilege-escalation analysis migration
+  `0007` did for every other table: who can set it, and through what
+  write path. Every `/api/admin/*` route re-checks this server-side —
+  don't rely on the `(admin)/admin` layout's redirect alone, since API
+  routes are reachable directly.
+- **`pricing_config`** only controls the *displayed* Pro price on the
+  marketing page — it has no connection to what Razorpay actually
+  charges (`RAZORPAY_PLAN_ID`'s plan). Don't let the two drift without
+  telling the user; the admin pricing page's warning banner explaining
+  this is load-bearing copy, not decoration.

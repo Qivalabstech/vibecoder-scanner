@@ -5,6 +5,7 @@ import { createServiceClient } from "@/lib/supabase/service";
 import { verifyRepoAccess } from "@/lib/github";
 import { generateVerificationToken, normalizeSiteIdentifier } from "@/lib/verification";
 import { logAudit } from "@/lib/audit";
+import { isSuperAdminEmail } from "@/lib/admin";
 
 const bodySchema = z.discriminatedUnion("type", [
   z.object({
@@ -50,10 +51,13 @@ export async function POST(request: Request) {
   const body = parsed.data;
   const service = createServiceClient();
 
-  // Free tier: 1 target (Phase 7 pricing gate, enforced here rather than trusting the UI)
+  // Free tier: 1 target (Phase 7 pricing gate, enforced here rather than trusting the UI).
+  // Super admins (env-allowlisted, see src/lib/admin.ts) are exempt — they need to
+  // connect arbitrary repos to verify scans without going through billing.
+  const isAdmin = isSuperAdminEmail(user.email);
   const { data: profile } = await service.from("users").select("plan").eq("id", user.id).single();
   const { count } = await supabase.from("targets").select("*", { count: "exact", head: true });
-  if (profile?.plan === "free" && (count ?? 0) >= 1) {
+  if (!isAdmin && profile?.plan === "free" && (count ?? 0) >= 1) {
     return NextResponse.json(
       { error: "plan_limit", message: "Free plan allows 1 target. Upgrade to add more." },
       { status: 402 }

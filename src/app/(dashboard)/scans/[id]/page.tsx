@@ -66,7 +66,10 @@ export default async function ScanDetailPage({ params }: PageProps<"/scans/[id]"
       <ScanPoller status={scan.status as ScanStatus} />
 
       {scan.status === "queued" || scan.status === "running" ? (
-        <ScanProgressAnimation targetType={target?.type as "repo" | "site" | undefined} />
+        <ScanProgressAnimation
+          targetType={target?.type as "repo" | "site" | undefined}
+          startedAt={scan.started_at}
+        />
       ) : scan.status === "failed" ? (
         <Card className="border-destructive/40">
           <CardContent className="py-12 text-center text-sm text-muted-foreground">
