@@ -1,5 +1,28 @@
 # Memory
 
+## Current state (2026-09-13, Vercel project + domain renamed to Hakscan)
+
+Renamed the Vercel project from `vibecoder-scanner` to `hakscan`
+(`qivalabstechs-projects/hakscan`, same Project ID
+`prj_6imtUYuUuYwkL9XQg93D8RKo04BK`) and added `hakscan.vercel.app` as a
+Production domain. **Kept** `vibecoder-scanner-delta.vercel.app` as a
+secondary alias rather than removing it — both currently resolve to the
+same deployment, so nothing with the old URL bookmarked breaks. Updated
+every place that had the old domain hardcoded:
+- Vercel env var `NEXT_PUBLIC_APP_URL` → `https://hakscan.vercel.app`
+- PayPal sandbox webhook (`29C380051N579361W`) URL → `https://hakscan.vercel.app/api/billing/webhook`
+- Supabase Auth (`bareloop` project) Site URL → `https://hakscan.vercel.app`, and added `https://hakscan.vercel.app/**` to the redirect URL allowlist (the old domain and `localhost:3060` are still allowlisted too)
+Did **not** need to touch the GitHub OAuth App — its registered callback
+is Supabase's own fixed URL (`https://oadghnzcqbefuxfyxmrw.supabase.co/auth/v1/callback`), not this app's domain, so it was never coupled to the old name.
+
+Redeployed and verified live end-to-end on the new domain: real signup,
+real dashboard, real PayPal subscribe button rendering from a real
+`/api/billing/subscribe` call. `hakscan.com` (the actual purchasable
+domain) is still unregistered as of this session — once the user buys
+it, it can be added here the same way `hakscan.vercel.app` was, and
+`NEXT_PUBLIC_APP_URL`/the PayPal webhook/Supabase Site URL would need
+updating again to match.
+
 ## Current state (2026-09-13, VengeanceUI redesign pass)
 
 Redesigned the marketing site, auth pages, and dashboard/admin chrome
