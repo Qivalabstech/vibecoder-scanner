@@ -1,5 +1,30 @@
 # Memory
 
+## Current state (2026-09-13, VengeanceUI redesign pass)
+
+Redesigned the marketing site, auth pages, and dashboard/admin chrome
+using components pulled from the VengeanceUI registry (its own MCP server
+failed to connect this session — used the documented GitHub-API/CLI
+fallback instead of guessing component names). Installed only 6
+uniquely-named leaf components (`border-beam`, `cyber-glitch-text`,
+`animated-number`, `glow-border-card`, `copy-button`, `spotlight-navbar`)
+after confirming several other registry names (`button`, `card`, `badge`,
+etc.) would have silently overwritten this project's existing Base-UI
+(not Radix) shadcn primitives — see `docs/rules.md`'s new entry.
+Everything else (PayPal integration, scan logic, severity colors, the
+3D-globe hero, every API route) was left untouched; only decoration
+changed. Re-verified live that billing still works after the visual pass.
+
+Found and fixed a real bug in the installed `cyber-glitch-text.tsx`: its
+root element was a `<div>`, invalid inside `<p>`/`<h1>`/`<h2>` — every
+place this redesign uses it. Caused a hydration crash to unstyled
+light-mode HTML on first load. Fixed at the component level (all `<div>`s
+→ `<span>`s) rather than avoiding the usages, since the same bug would
+resurface anywhere else the component gets used.
+
+Also found and fixed a stale `IndianRupee` icon on the admin sidebar's
+Pricing link, left over from before the INR→USD switch.
+
 **This file is a running log — update it whenever meaningful progress
 happens** (a phase lands, a bug is found and fixed, a blocker shows up), not
 just at setup. A memory.md only ever written once is worth nothing to the

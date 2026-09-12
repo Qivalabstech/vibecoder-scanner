@@ -40,6 +40,19 @@
   `render` is passed). `Select` needs an `items={{value: label}}` map on the
   root for the trigger to display the selected label — without it, the
   trigger shows the raw value string.
+- **Never `shadcn add` a VengeanceUI registry component whose name matches
+  an existing `src/components/ui/*` file** (`button`, `card`, `badge`,
+  `dialog`, `tabs`, `checkbox`, `input`, `select`, `separator`, `avatar`,
+  `alert`, `dropdown-menu`, at minimum). Those registry items target
+  `components/ui/<name>.tsx` directly and are Radix-based — this project's
+  same-named files are deliberately Base UI (see the rule above); running
+  the install would silently overwrite a working component and break
+  every `render={<Link/>}`-style call site. Page-level VengeanceUI blocks
+  (`hero-section-N`, `pricing-N`, `features-N`, `footer-N`) compound this
+  via `registryDependencies` pulling in `button`/`card` — hand-port their
+  layout into this app's own files instead of running `shadcn add` on
+  them. Only install VengeanceUI's uniquely-named leaf/effect components
+  directly (confirmed zero overlap first).
 - **lucide-react has no brand icons** in the installed version (`Github`
   etc. were removed upstream). Use `src/components/icons/github-icon.tsx`
   (hand-rolled SVG) rather than reaching for a lucide import that doesn't
