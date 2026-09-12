@@ -5,6 +5,52 @@ happens** (a phase lands, a bug is found and fixed, a blocker shows up), not
 just at setup. A memory.md only ever written once is worth nothing to the
 next session.
 
+## Current state (2026-09-12, PayPal sandbox setup)
+
+PayPal billing is now fully wired and verified end-to-end in both dev and
+production, using real sandbox credentials (not just the graceful-failure
+path):
+
+- Created a PayPal sandbox app ("Vibecoder Scanner US"), Product, Plan
+  ($24/mo USD, `P-96T49030WX671005BNKSUYSA`), and webhook
+  (`29C380051N579361W`, pointed at
+  `https://vibecoder-scanner-delta.vercel.app/api/billing/webhook`) via
+  direct REST API calls (token exchange + `/v1/catalogs/products` +
+  `/v1/billing/plans` + `/v1/notifications/webhooks`), not the dashboard
+  UI — faster and scriptable.
+- **Real finding, not a code bug**: the first sandbox app was built on a
+  business account with country **IN**. Every subscription approval
+  through it failed with PayPal's generic "We're sorry, things don't
+  appear to be working" — reproduced 3x. Created a second sandbox
+  business account with country **US**, a second app tied to it, and the
+  identical subscription completed successfully (`ACTIVE`, real
+  `$24.00 USD` charge in the sandbox ledger). This strongly suggests
+  **PayPal India business accounts can't process subscriptions in
+  sandbox**, mirroring the exact RBI-driven recurring-billing restriction
+  that pushed this project off Razorpay in the first place. **When the
+  user sets up their real (live) PayPal business account, it needs to be
+  a non-India entity for subscriptions to work** — this should be
+  confirmed with PayPal directly before assuming it'll work.
+- All 6 `PAYPAL_*` env vars are set in **both** `.env.local` and Vercel
+  production, using the working US app's credentials. Verified live on
+  `vibecoder-scanner-delta.vercel.app`: a real signup → real "Upgrade to
+  Pro" click → real PayPal Subscribe/Debit-card buttons rendered,
+  confirming the production→PayPal round-trip actually works with these
+  credentials (not just the local dev server).
+- **Vercel CLI footgun discovered**: the CLI (`npx vercel`, logged in as
+  `quickintelligenceva-lab`) is linked to a *different, empty*
+  `vibecoder-scanner` project under team `qiva` — not the real one
+  (`qivalabstechs-projects`/`vibecoder-scanner`, serving
+  `vibecoder-scanner-delta.vercel.app`). Five env vars got added to that
+  wrong/unused project before this was caught. **Don't trust `vercel env
+  add`/`ls` in this repo without first confirming `vercel whoami` +
+  `vercel project ls` matches the actual deployed project** — use the
+  Vercel dashboard (logged in as `tech@qivalabs.com`) for anything
+  touching the real `vibecoder-scanner-delta` deployment instead.
+- Triggered a manual Redeploy (no code changes) from the Vercel dashboard
+  so the new env vars actually took effect — env var changes alone don't
+  redeploy automatically.
+
 ## Current state
 
 All 8 phases from the original spec are built. As of 2026-09-11 the app is

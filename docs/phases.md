@@ -118,8 +118,18 @@ don't let it drift into a forward-only plan.
       `src/lib/paypal.ts` (fetch-based REST client, no SDK); migration
       `0010` replaces `users.razorpay_*` with `paypal_subscription_id`/
       `paypal_payer_id` (confirmed zero live subscribers before dropping
-      the old columns). Real end-to-end checkout still can't be tested —
-      no `PAYPAL_*` credentials exist yet, same gap Razorpay had.
+      the old columns).
+- [x] **2026-09-12 (sandbox setup)**: a real PayPal sandbox app, Product,
+      Plan, and webhook were created and wired into both `.env.local` and
+      Vercel production. Verified a genuine end-to-end subscription
+      (`ACTIVE`, real `$24 USD` charge in sandbox) — but only after
+      discovering the first sandbox merchant account (country IN)
+      couldn't complete subscriptions at all (PayPal's generic sandbox
+      error, reproduced 3x); a second US-country sandbox merchant
+      completed the identical flow cleanly. See `memory.md` for the full
+      finding — **the user's real PayPal business account will likely
+      need to be non-India for subscriptions to work**, the same
+      constraint that motivated leaving Razorpay.
 
 - [x] Free tier: 1 target, manual scan only (enforced server-side in
       `POST /api/targets`)
