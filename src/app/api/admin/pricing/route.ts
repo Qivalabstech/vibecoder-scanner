@@ -5,7 +5,7 @@ import { createServiceClient } from "@/lib/supabase/service";
 import { isSuperAdminEmail } from "@/lib/admin";
 import { logAudit } from "@/lib/audit";
 
-const bodySchema = z.object({ proPriceInr: z.number().int().min(0) });
+const bodySchema = z.object({ proPriceUsd: z.number().min(0) });
 
 export async function POST(request: Request) {
   const supabase = await createClient();
@@ -28,7 +28,7 @@ export async function POST(request: Request) {
   const service = createServiceClient();
   const { error } = await service
     .from("pricing_config")
-    .update({ pro_price_inr: parsed.data.proPriceInr, updated_at: new Date().toISOString() })
+    .update({ pro_price_usd: parsed.data.proPriceUsd, updated_at: new Date().toISOString() })
     .eq("id", 1);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
@@ -36,7 +36,7 @@ export async function POST(request: Request) {
   await logAudit({
     userId: user.id,
     action: "admin.pricing.updated",
-    metadata: { proPriceInr: parsed.data.proPriceInr },
+    metadata: { proPriceUsd: parsed.data.proPriceUsd },
   });
 
   return NextResponse.json({ ok: true });

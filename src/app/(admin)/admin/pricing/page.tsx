@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminPricingPage() {
   const service = createServiceClient();
-  const { data: pricing } = await service.from("pricing_config").select("pro_price_inr").eq("id", 1).single();
+  const { data: pricing } = await service.from("pricing_config").select("pro_price_usd").eq("id", 1).single();
 
   return (
     <div className="mx-auto max-w-xl space-y-6">
@@ -16,7 +16,7 @@ export default async function AdminPricingPage() {
         </p>
       </div>
 
-      <PricingForm initialPrice={pricing?.pro_price_inr ?? 1999} />
+      <PricingForm initialPrice={pricing?.pro_price_usd ?? 24} />
 
       <div className="rounded-md border border-severity-medium/30 bg-severity-medium/10 p-4 text-sm">
         <p className="font-heading text-xs font-medium tracking-wide text-severity-medium">
@@ -36,6 +36,11 @@ export default async function AdminPricingPage() {
         <p className="mt-2 text-muted-foreground">
           Existing subscribers keep their original plan/price until they cancel and resubscribe —
           Razorpay doesn&apos;t support changing an active subscription&apos;s amount in place.
+        </p>
+        <p className="mt-2 text-muted-foreground">
+          Billing in USD also requires <strong>Razorpay International/multi-currency</strong> to be
+          enabled on your merchant account (a KYC/business-settings step in the Razorpay dashboard) —
+          without it, a USD-denominated plan can&apos;t actually be created or charged.
         </p>
       </div>
     </div>

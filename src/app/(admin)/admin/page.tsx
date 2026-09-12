@@ -19,7 +19,7 @@ export default async function AdminOverviewPage() {
     service.from("targets").select("*", { count: "exact", head: true }),
     service.from("targets").select("*", { count: "exact", head: true }).eq("verified", true),
     service.from("scans").select("id, status, target_id, created_at"),
-    service.from("pricing_config").select("pro_price_inr").eq("id", 1).single(),
+    service.from("pricing_config").select("pro_price_usd").eq("id", 1).single(),
     service
       .from("audit_log")
       .select("id, action, metadata, created_at, user_id")
@@ -30,7 +30,7 @@ export default async function AdminOverviewPage() {
   const allUsers = users ?? [];
   const freeUsers = allUsers.filter((u) => u.plan === "free");
   const paidUsers = allUsers.filter((u) => u.plan === "paid");
-  const proPrice = pricing?.pro_price_inr ?? 0;
+  const proPrice = pricing?.pro_price_usd ?? 0;
   const estimatedMrr = paidUsers.length * proPrice;
 
   const allScans = scans ?? [];
@@ -63,8 +63,8 @@ export default async function AdminOverviewPage() {
         <StatCard label="Paid plan" value={paidUsers.length} />
         <StatCard
           label="Est. MRR"
-          value={`₹${estimatedMrr.toLocaleString("en-IN")}`}
-          hint={`${paidUsers.length} × ₹${proPrice.toLocaleString("en-IN")} — estimate, not a Razorpay ledger total`}
+          value={`$${estimatedMrr.toLocaleString("en-US")}`}
+          hint={`${paidUsers.length} × $${proPrice.toLocaleString("en-US")} — estimate, not a Razorpay ledger total`}
         />
       </div>
 

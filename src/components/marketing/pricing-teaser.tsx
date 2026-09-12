@@ -3,11 +3,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Check } from "lucide-react";
 
-export function PricingTeaser({ proPriceInr }: { proPriceInr: number }) {
+export function PricingTeaser({ proPriceUsd }: { proPriceUsd: number }) {
   const tiers = [
     {
       name: "Free",
-      price: "₹0",
+      price: "$0",
       cadence: "forever",
       features: ["1 target", "Manual scans", "Basic report"],
       cta: "Start free",
@@ -15,7 +15,7 @@ export function PricingTeaser({ proPriceInr }: { proPriceInr: number }) {
     },
     {
       name: "Pro",
-      price: `₹${proPriceInr.toLocaleString("en-IN")}`,
+      price: `$${proPriceUsd.toLocaleString("en-US")}`,
       cadence: "/mo",
       features: [
         "Unlimited targets",

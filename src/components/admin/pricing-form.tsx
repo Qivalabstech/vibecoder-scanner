@@ -16,15 +16,15 @@ export function PricingForm({ initialPrice }: { initialPrice: number }) {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const parsed = Number(price);
-    if (!Number.isInteger(parsed) || parsed < 0) {
-      toast.error("Enter a whole number of rupees, 0 or more.");
+    if (!Number.isFinite(parsed) || parsed < 0) {
+      toast.error("Enter a price of 0 or more.");
       return;
     }
     setLoading(true);
     const res = await fetch("/api/admin/pricing", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ proPriceInr: parsed }),
+      body: JSON.stringify({ proPriceUsd: parsed }),
     });
     setLoading(false);
     if (!res.ok) {
@@ -41,12 +41,12 @@ export function PricingForm({ initialPrice }: { initialPrice: number }) {
       <CardContent className="pt-6">
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="price">Pro plan price (₹/month)</Label>
+            <Label htmlFor="price">Pro plan price ($/month)</Label>
             <Input
               id="price"
               type="number"
               min={0}
-              step={1}
+              step={0.01}
               value={price}
               onChange={(e) => setPrice(e.target.value)}
             />

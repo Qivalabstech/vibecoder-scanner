@@ -6,8 +6,8 @@ import { createClient } from "@/lib/supabase/server";
 
 export default async function Home() {
   const supabase = await createClient();
-  const { data: pricing } = await supabase.from("pricing_config").select("pro_price_inr").eq("id", 1).single();
-  const proPriceInr = pricing?.pro_price_inr ?? 1999;
+  const { data: pricing } = await supabase.from("pricing_config").select("pro_price_usd").eq("id", 1).single();
+  const proPriceUsd = pricing?.pro_price_usd ?? 24;
 
   return (
     <>
@@ -15,7 +15,7 @@ export default async function Home() {
       <main className="flex-1">
         <MarketingHero />
         <HowItWorks />
-        <PricingTeaser proPriceInr={proPriceInr} />
+        <PricingTeaser proPriceUsd={proPriceUsd} />
       </main>
       <footer className="border-t border-border/60 py-10">
         <div className="mx-auto max-w-6xl px-6 text-sm text-muted-foreground">
