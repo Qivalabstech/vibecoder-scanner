@@ -1,5 +1,66 @@
 # Memory
 
+## Current state (2026-09-14, dogfooding: scanned Hakscan with itself)
+
+Did a full end-to-end re-verification on the real `hakscan.online` domain
+(signup, GitHub OAuth login, dashboard, admin, billing — all confirmed
+live), then used the product on itself for real:
+
+- **Repo scan** of `Qivalabstech/vibecoder-scanner` — 2 findings, both
+  confirmed **false positives** on inspection (no `ANTHROPIC_API_KEY` set,
+  so no AI triage to catch these automatically): a `path.join` in
+  `worker/scanners/repo-scan.ts:102` flagged for path traversal (inputs
+  are a hardcoded filename + a server-generated temp dir, never user
+  input), and a `console.error` template literal in `worker/index.ts:238`
+  flagged for format-string injection (not a real sink). Left the code
+  as-is — these are exactly the kind of noise the (currently unconfigured)
+  AI-analysis layer exists to filter.
+- **Live-site scan** of `hakscan.online` — added it as a real site
+  target, verified via a real meta tag (`SITE_VERIFICATION_TOKEN` env
+  var → `<meta name="hakscan-site-verification">` in `src/app/layout.tsx`,
+  removable later), and ran a real ZAP baseline. First pass: 6 real
+  findings — missing CSP, anti-clickjacking header, X-Content-Type-Options,
+  Permissions-Policy, CORP, and an X-Powered-By version leak.
+
+**Fixed all of the fixable ones** in `next.config.ts`'s `headers()`:
+CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy,
+Permissions-Policy, Cross-Origin-Resource-Policy,
+Cross-Origin-Opener-Policy (`same-origin-allow-popups`, not the
+stricter `same-origin` — untested against PayPal's less common 3DS
+popup flows), and disabled `X-Powered-By` via `poweredByHeader: false`.
+Deliberately **did not** set Cross-Origin-Embedder-Policy — it would
+require PayPal's cross-origin button iframe to opt in via CORP/CORS,
+which it doesn't, so shipping it would break checkout to silence an
+informational finding.
+
+**Two real regressions found and fixed by testing, not skipped**:
+1. The first CSP draft blocked PayPal's *sandbox* domains
+   (`www.sandbox.paypal.com` is a different origin from
+   `www.paypal.com`, only relevant because `PAYPAL_ENV=sandbox` here) —
+   caught via actual console errors when opening the real checkout
+   modal locally before pushing.
+2. A follow-up "tighten img-src" commit removed the `https:` wildcard
+   based on a `grep` for `<img>` finding nothing in our source — wrong,
+   because PayPal's SDK injects its own logo/card-icon `<img>` tags into
+   the document at runtime via JS, which a source grep can't see. Caught
+   the same way: loaded the real billing page, saw real blocked-image
+   console errors, fixed by scoping `img-src` to exactly
+   `paypalobjects.com` instead of reverting to the wildcard.
+
+Re-scanned `hakscan.online` after the header fixes landed: the 6 fixed
+findings are gone. ZAP's re-scan surfaced new, mostly-informational
+items instead — `script-src`/`style-src 'unsafe-inline'` (needed for the
+inline theme-init script and styled-jsx-based VengeanceUI components;
+a nonce-based CSP would remove this but is a real follow-up piece of
+work, not a quick fix), COEP still absent (intentional, see above), and
+3 low-severity cache-header notes (informational, not action items).
+
+Cleaned up every test account created during this pass
+(`csp-header-verify@`, `csp-imgsrc-fix-verify@`, `final-prod-check@`,
+etc.) via the Supabase admin API afterward, and also caught + deleted
+`paypal-sandbox-test@example.com`, a leftover from an earlier session
+that never got cleaned up.
+
 ## Current state (2026-09-14, old vercel.app domain removed)
 
 Removed `vibecoder-scanner-delta.vercel.app` from the Vercel project at

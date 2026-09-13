@@ -163,3 +163,18 @@
   cancelled sub run out its paid period. Don't reintroduce a deferred-
   cancellation UX without also solving how to stop PayPal from billing
   again in the meantime — the two have to change together.
+- **`next.config.ts`'s `headers()` CSP is load-bearing, not boilerplate.**
+  It was built by actually scanning `hakscan.online` with this product
+  and fixing real findings — and twice broke PayPal's checkout while
+  being tightened, both times caught only by loading the real billing
+  page and reading console errors, not by re-reasoning about the change.
+  Before editing `img-src`/`script-src`/`connect-src`/`frame-src`: PayPal's
+  JS SDK injects `<img>` tags at runtime (a source grep for `<img>` won't
+  find them) and calls both `www.paypal.com` and `www.sandbox.paypal.com`
+  (the sandbox domain only matters while `PAYPAL_ENV=sandbox`, but don't
+  remove it until that's actually flipped to live). After any CSP change,
+  reload `/settings/billing` on a **fresh tab** (this project's browser
+  tool buffers stale console messages across navigations on a reused tab)
+  and confirm zero console errors before pushing. Cross-Origin-Embedder-
+  Policy is deliberately absent — enabling it would require PayPal's
+  cross-origin button iframe to opt in via CORP/CORS, which it doesn't.
