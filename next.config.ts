@@ -19,7 +19,9 @@ const CSP = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline' ${isDev ? "'unsafe-eval' " : ""}${PAYPAL_ORIGINS}`,
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: https:",
+  // no <img> usage anywhere in the app (confirmed via grep) — no need for
+  // the broad https: wildcard ZAP flagged.
+  "img-src 'self' data:",
   "font-src 'self' data:",
   `connect-src 'self' ${isDev ? "ws: " : ""}https://api-m.paypal.com https://api-m.sandbox.paypal.com ${PAYPAL_ORIGINS} https://*.supabase.co`,
   `frame-src ${PAYPAL_ORIGINS}`,
