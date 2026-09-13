@@ -17,6 +17,11 @@ export const metadata: Metadata = {
   title: "Hakscan: Security scans for AI-built apps",
   description:
     "Scan your GitHub repo or live site for vulnerabilities and get an AI-explained, prioritized report you can actually act on.",
+  // Site-ownership proof for scanning hakscan.online with our own product —
+  // remove once that target no longer needs re-verification.
+  other: process.env.SITE_VERIFICATION_TOKEN
+    ? { "hakscan-site-verification": process.env.SITE_VERIFICATION_TOKEN }
+    : {},
 };
 
 // Runs before paint: defaults to dark unless the visitor explicitly chose light.
