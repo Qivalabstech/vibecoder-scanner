@@ -57,9 +57,9 @@
   etc. were removed upstream). Use `src/components/icons/github-icon.tsx`
   (hand-rolled SVG) rather than reaching for a lucide import that doesn't
   exist.
-- **Zod for both request-body validation and Claude structured output** —
-  `client.messages.parse()` + `zodOutputFormat()`, not manual JSON parsing
-  of a tool call.
+- **Zod for both request-body validation and AI structured output** —
+  `client.chat.completions.parse()` + `zodResponseFormat()`
+  (`worker/lib/ai-analysis.ts`), not manual JSON parsing of a tool call.
 - **Reduced-motion and capability checks via `useSyncExternalStore`**, not
   `useEffect` + `setState` — avoids the `react-hooks/set-state-in-effect`
   lint error and the SSR/hydration flash. See `src/lib/use-reduced-motion.ts`

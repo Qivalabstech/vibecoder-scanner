@@ -1,5 +1,5 @@
-import Anthropic from "@anthropic-ai/sdk";
-import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
+import OpenAI from "openai";
+import { zodResponseFormat } from "openai/helpers/zod";
 import { z } from "zod";
 import type { InsertedFinding, Severity } from "./findings";
 
@@ -61,11 +61,11 @@ function chunk<T>(items: T[], size: number): T[][] {
 
 export async function analyzeFindings(findings: InsertedFinding[]): Promise<FindingAssessment[]> {
   if (findings.length === 0) return [];
-  if (!process.env.ANTHROPIC_API_KEY) {
-    throw new Error("ANTHROPIC_API_KEY not set — skipping AI analysis");
+  if (!process.env.OPENAI_API_KEY) {
+    throw new Error("OPENAI_API_KEY not set — skipping AI analysis");
   }
 
-  const client = new Anthropic();
+  const client = new OpenAI();
   const batches = chunk(findings, BATCH_SIZE);
   const results: FindingAssessment[] = [];
 
@@ -79,18 +79,23 @@ export async function analyzeFindings(findings: InsertedFinding[]): Promise<Find
       rawSeverity: f.severity,
     }));
 
-    const response = await client.messages.parse({
-      model: "claude-opus-5",
+    const completion = await client.chat.completions.parse({
+      model: "gpt-4o-mini",
       max_tokens: 16000,
-      system: SYSTEM_PROMPT,
-      messages: [{ role: "user", content: JSON.stringify(input, null, 2) }],
-      output_config: { format: zodOutputFormat(AnalysisSchema) },
+      messages: [
+        { role: "system", content: SYSTEM_PROMPT },
+        { role: "user", content: JSON.stringify(input, null, 2) },
+      ],
+      response_format: zodResponseFormat(AnalysisSchema, "finding_assessments"),
     });
 
-    if (!response.parsed_output) {
-      throw new Error(`Claude analysis returned unparseable output (stop_reason: ${response.stop_reason})`);
+    const parsed = completion.choices[0]?.message.parsed;
+    if (!parsed) {
+      throw new Error(
+        `AI analysis returned unparseable output (finish_reason: ${completion.choices[0]?.finish_reason})`
+      );
     }
-    results.push(...response.parsed_output.assessments);
+    results.push(...parsed.assessments);
   }
 
   return results;

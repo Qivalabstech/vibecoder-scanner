@@ -9,8 +9,8 @@
 - BullMQ + Redis (scan job queue, including cron-based scheduled re-scans)
 - Docker, shelled out to from the worker: `semgrep/semgrep`,
   `zricethezav/gitleaks`, `zaproxy/zap-stable`
-- `@anthropic-ai/sdk` (`claude-opus-5`, structured outputs via
-  `messages.parse()` + Zod) for findings triage
+- `openai` (`gpt-4o-mini`, structured outputs via
+  `chat.completions.parse()` + Zod) for findings triage
 - `@react-pdf/renderer` (PDF reports), Resend (email)
 - PayPal REST API (fetch-based, no SDK — `src/lib/paypal.ts`) for
   subscriptions + webhook signature verification
@@ -23,7 +23,7 @@
 │  - pages, API routes      │  BullMQ │  process, run separately   │
 │  - proxy.ts auth gate    │───────▶│  (npm run worker:dev)      │
 │  - enqueues scan jobs    │  queue  │  - polls Docker tools      │
-└───────────┬──────────────┘        │  - calls Claude, Resend    │
+└───────────┬──────────────┘        │  - calls OpenAI, Resend    │
             │                        └──────────────┬─────────────┘
             │ Supabase (RLS-scoped            service-role
             │ client/server clients)                │
@@ -69,7 +69,7 @@ verified=true immediately      ▼
         re-checks target.verified (belt-and-suspenders)
         runs Semgrep+Gitleaks or ZAP in Docker
         inserts raw findings
-        sends them to Claude → severity/explanation/fix,
+        sends them to OpenAI → severity/explanation/fix,
           deletes duplicates/false-positives
         emails the user (best-effort)
              ▼
@@ -127,7 +127,7 @@ src/
   proxy.ts          — Next 16's middleware.ts replacement; auth gate + session refresh
 worker/
   index.ts                — BullMQ Worker, orchestrates one scan end-to-end
-  lib/{supabase,audit,findings,claude-analysis,email,docker-run}.ts
+  lib/{supabase,audit,findings,ai-analysis,email,docker-run}.ts
   scanners/{repo-scan,site-scan}.ts
 supabase/migrations/
   0001_init.sql                    — users/targets/scans/findings/audit_log + RLS
@@ -171,8 +171,8 @@ docker-compose.yml   — local Redis only; Docker itself must be installed separ
   re-checking both verification and (since scheduling is paid-only) that the
   plan hasn't lapsed since the schedule was set — self-cancelling the
   scheduler if so.
-- **AI analysis failure degrades, never blocks.** Missing `ANTHROPIC_API_KEY`
-  or a failed Claude call leaves raw (unanalyzed) findings in place rather
+- **AI analysis failure degrades, never blocks.** Missing `OPENAI_API_KEY`
+  or a failed OpenAI call leaves raw (unanalyzed) findings in place rather
   than failing the scan — same pattern for missing `RESEND_API_KEY`. An
   unreachable Redis at scan-trigger time is the one case that does fail
   loudly (scan marked `failed` immediately, not left `queued` forever).

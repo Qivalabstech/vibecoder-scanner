@@ -26,7 +26,7 @@ on — not a wall of scanner jargon.
   only) for sites, each run in an isolated, auto-removed Docker container.
 - **AI analysis**: raw findings are deduplicated, false-positive-filtered,
   re-triaged for severity, and rewritten in plain language with a concrete
-  fix, via the Claude API.
+  fix, via the OpenAI API.
 - **Findings dashboard**: per-target scan history, per-scan findings grouped
   by severity, technical detail behind a toggle rather than in the main view.
 - **Reports & notifications**: downloadable PDF report per completed scan;

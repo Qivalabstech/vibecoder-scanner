@@ -3,7 +3,7 @@ import IORedis from "ioredis";
 import { createServiceClient } from "./lib/supabase";
 import { logAudit } from "./lib/audit";
 import { insertFindings, type InsertedFinding, type Severity } from "./lib/findings";
-import { analyzeFindings } from "./lib/claude-analysis";
+import { analyzeFindings } from "./lib/ai-analysis";
 import { sendScanCompleteEmail } from "./lib/email";
 import { runAbuseScan } from "./lib/abuse-monitor";
 import { runRepoScan } from "./scanners/repo-scan";
@@ -164,11 +164,11 @@ async function notifyScanComplete(
 }
 
 /**
- * Runs the Claude triage pass over raw findings, then applies it: duplicates
- * and confident false positives are deleted, everything else gets Claude's
+ * Runs the AI triage pass over raw findings, then applies it: duplicates
+ * and confident false positives are deleted, everything else gets the AI's
  * re-assessed severity plus the plain-language explanation and fix. Falls
  * back to leaving raw findings untouched (with a warning in the audit log)
- * if ANTHROPIC_API_KEY isn't configured or the call fails — a scan finishing
+ * if OPENAI_API_KEY isn't configured or the call fails — a scan finishing
  * with unanalyzed findings is better than one that never finishes.
  */
 async function runAiAnalysis(

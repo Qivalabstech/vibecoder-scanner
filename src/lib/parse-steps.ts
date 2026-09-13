@@ -1,7 +1,7 @@
 /**
  * Splits an AI-generated fix suggestion into discrete, numbered steps for
  * display in the dashboard and PDF report. Handles the formats
- * worker/lib/claude-analysis.ts is prompted to produce (numbered lines)
+ * worker/lib/ai-analysis.ts is prompted to produce (numbered lines)
  * plus a couple of common fallbacks, so older rows written before that
  * prompt change still render sensibly instead of as one dense paragraph.
  */

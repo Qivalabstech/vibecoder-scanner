@@ -23,7 +23,7 @@ export default function TermsPage() {
       <p className="text-muted-foreground">
         Hakscan runs automated security scans (Semgrep, Gitleaks,
         and a passive OWASP ZAP baseline) against GitHub repositories and
-        live websites you add as targets, then uses the Claude API to
+        live websites you add as targets, then uses the OpenAI API to
         explain the findings in plain language and suggest fixes. It is a
         detection aid, not a guarantee of security. A clean scan does not
         mean a target has no vulnerabilities, and we make no warranty that
@@ -72,7 +72,7 @@ export default function TermsPage() {
       <h2 className="mt-8 text-xl font-semibold">7. Third-party services</h2>
       <p className="text-muted-foreground">
         Operating the Service means sending data to third-party providers:
-        Supabase (database, authentication), Anthropic (the Claude API, to
+        Supabase (database, authentication), OpenAI (the OpenAI API, to
         analyze and explain scan findings), GitHub (OAuth and repository
         access for repos you add), Resend (transactional email), and
         PayPal (payment processing for paid plans). Each processes data

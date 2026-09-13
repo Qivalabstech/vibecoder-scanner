@@ -4,7 +4,7 @@ _(formerly "Vibecoder Scanner" — renamed 2026-09-12; see `docs/memory.md`.)_
 
 Security scanning platform for indie founders building with AI. **Phases
 0–8 are all built**: design system, auth, the ownership verification gate,
-the Docker-sandboxed scan workers, the Claude AI-analysis layer, the
+the Docker-sandboxed scan workers, the OpenAI AI-analysis layer, the
 findings dashboard, reports/notifications, PayPal billing, and legal +
 safety guardrails. The one thing that genuinely can't be finished by an AI
 session is real legal sign-off on the Terms of Service — see `docs/phases.md`
@@ -14,8 +14,8 @@ and the note at the bottom of this file.
 
 Next.js 16 (App Router) · TypeScript · Tailwind v4 · shadcn/ui (Base UI) ·
 Supabase (Postgres + Auth) · Framer Motion · React Three Fiber · BullMQ +
-Redis (queue) · Docker (Semgrep / Gitleaks / OWASP ZAP baseline) · Claude API
-(`@anthropic-ai/sdk`, findings triage) · `@react-pdf/renderer` (reports) ·
+Redis (queue) · Docker (Semgrep / Gitleaks / OWASP ZAP baseline) · OpenAI API
+(`openai`, `gpt-4o-mini`, findings triage) · `@react-pdf/renderer` (reports) ·
 Resend (scan-complete emails) · PayPal (subscriptions)
 
 > This Next.js version has real breaking changes vs. older docs/training data
@@ -84,7 +84,7 @@ supabase.com project.
 3. Copy `.env.local.example` to `.env.local` and fill in:
    - `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` — Project Settings → API
    - `SUPABASE_SERVICE_ROLE_KEY` — same page (server-only, never expose to the client)
-   - `ANTHROPIC_API_KEY` — needed by the worker's AI-analysis pass; if unset,
+   - `OPENAI_API_KEY` — needed by the worker's AI-analysis pass; if unset,
      scans still complete with raw (unanalyzed) findings — see below
    - `RESEND_API_KEY` / `RESEND_FROM_EMAIL` — needed for scan-complete
      emails; if unset, scans still complete, just silently without an email
@@ -146,17 +146,17 @@ supabase.com project.
   - If Redis is unreachable when a scan is triggered, the API route marks
     the scan `failed` immediately rather than leaving it stuck `queued`
     forever with nothing watching it.
-- **AI analysis layer** (`worker/lib/claude-analysis.ts`): after raw findings
-  are inserted, the worker sends them to Claude (`claude-opus-5`) in batches
-  of 40 via `client.messages.parse()` with a Zod output schema (structured
-  outputs, not a hand-parsed tool call) and asks it to:
+- **AI analysis layer** (`worker/lib/ai-analysis.ts`): after raw findings
+  are inserted, the worker sends them to OpenAI (`gpt-4o-mini`) in batches
+  of 40 via `client.chat.completions.parse()` with a Zod response format
+  (structured outputs, not a hand-parsed tool call) and asks it to:
   - flag duplicates and confident false positives — those rows are deleted
     rather than shown to the user;
   - re-assess severity with CVSS-style reasoning, overwriting the raw tool's
     provisional severity;
   - write `ai_explanation` (plain-language business impact) and
     `ai_fix_suggestion` (a concrete code-level fix) onto the remaining rows.
-  - If `ANTHROPIC_API_KEY` is unset or the call fails, the scan still
+  - If `OPENAI_API_KEY` is unset or the call fails, the scan still
     completes with the raw, unanalyzed findings intact — an unanalyzed
     result beats a scan that never finishes — and an
     `scan.ai_analysis_skipped` row lands in `audit_log`.
@@ -256,5 +256,5 @@ queue → worker → an actual `docker run zaproxy/zap-stable` → real findings
 written and rendered → a real generated PDF report, with AI analysis
 correctly degrading (no key configured) rather than blocking the scan.
 Still unverified: the repo-scan path (Semgrep/Gitleaks + GitHub OAuth —
-needs a real GitHub OAuth App and a repo to scan), and the Claude/Resend/
+needs a real GitHub OAuth App and a repo to scan), and the OpenAI/Resend/
 PayPal integrations (no real API keys available during testing).

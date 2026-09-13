@@ -17,7 +17,7 @@ const steps = [
   },
   {
     icon: FileText,
-    title: "Claude explains it",
+    title: "AI explains it",
     description:
       "Raw findings get triaged, deduplicated, and rewritten in plain language, with the business impact and the actual fix.",
   },
