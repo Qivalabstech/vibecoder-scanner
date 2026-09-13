@@ -1,5 +1,15 @@
 # Memory
 
+## Current state (2026-09-14, old vercel.app domain removed)
+
+Removed `vibecoder-scanner-delta.vercel.app` from the Vercel project at
+the user's request, now that `hakscan.online` is live and verified.
+Remaining domains: `hakscan.online` (canonical), `www.hakscan.online`
+(redirects to it), `hakscan.vercel.app` (kept as a free Vercel-provided
+fallback). No env vars/webhooks/Supabase config referenced the removed
+domain by this point — it was already fully migrated off in the prior
+entry — so this was a clean removal with nothing left dangling.
+
 ## Current state (2026-09-14, real domain hakscan.online is live)
 
 The user registered **hakscan.online** (Spaceship registrar) and pointed
