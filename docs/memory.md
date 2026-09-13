@@ -1,5 +1,27 @@
 # Memory
 
+## Current state (2026-09-14, real domain hakscan.online is live)
+
+The user registered **hakscan.online** (Spaceship registrar) and pointed
+its DNS at Vercel (`A @ → 216.198.79.1`, `CNAME www → <vercel-dns target>`).
+Added both `hakscan.online` and `www.hakscan.online` in Vercel's Domains
+settings. **The canonical/apex domain is `https://hakscan.online`** —
+`www.hakscan.online` redirects to it, not the reverse (this was initially
+assumed backwards and corrected after a live check). Updated all three
+downstream places again to point at the real domain:
+- `NEXT_PUBLIC_APP_URL` → `https://hakscan.online`
+- PayPal sandbox webhook (`29C380051N579361W`) → `https://hakscan.online/api/billing/webhook`
+- Supabase Auth Site URL → `https://hakscan.online`; both `https://hakscan.online/**` and `https://www.hakscan.online/**` are in the redirect allowlist alongside the older `hakscan.vercel.app`/`vibecoder-scanner-delta.vercel.app`/`localhost:3060` entries (none removed — extra allowlisted origins are harmless, removing a live one isn't reversible without notice)
+
+Redeployed and re-verified live end-to-end on `hakscan.online`: real
+signup, real dashboard, real PayPal subscribe button rendering. Domain
+propagated fast (no waiting needed by the time this was checked).
+
+`hakscan.vercel.app` and `vibecoder-scanner-delta.vercel.app` are both
+still attached to the project as secondary domains — intentionally left
+in place rather than removed, so nothing bookmarked or already configured
+elsewhere (if anything ever was) breaks.
+
 ## Current state (2026-09-13, Vercel project + domain renamed to Hakscan)
 
 Renamed the Vercel project from `vibecoder-scanner` to `hakscan`
