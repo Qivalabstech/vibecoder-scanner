@@ -1,16 +1,18 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import localFont from "next/font/local";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+// Brand typeface: JetBrains Mono, one family for both headings and body —
+// "one typeface, three weights" per the brand guidelines. Monospace
+// throughout is deliberate, not a placeholder.
+const jbm = localFont({
+  variable: "--font-jbm",
+  src: [
+    { path: "./fonts/jbm-regular.ttf", weight: "400", style: "normal" },
+    { path: "./fonts/jbm-medium.ttf", weight: "500", style: "normal" },
+    { path: "./fonts/jbm-bold.ttf", weight: "700", style: "normal" },
+  ],
 });
 
 export const metadata: Metadata = {
@@ -42,7 +44,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${jbm.variable} h-full antialiased`}
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
