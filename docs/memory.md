@@ -722,6 +722,14 @@ Nothing actively in progress.
     systemd unit loads, then `systemctl restart vibecoder-worker`).
     Vercel does **not** need this key — `analyzeFindings` is only ever
     called from `worker/index.ts`, never from any Next.js route.
+  - Re-ran both scans again shortly after (repo `Qivalabstech/vibecoder-scanner`
+    and a fresh live-site scan of `hakscan.online`) to confirm the clean
+    state holds. Repo: still 0 real findings (same 2 known false positives,
+    re-confirmed and removed). Site: 7 raw ZAP findings this time (down
+    from 8-11 in earlier pre-header-fix scans — the CSP/security-header
+    work already closed the real gaps), AI correctly triaged all 7 as
+    false positives/duplicates, 0 real findings remain. Both the repo and
+    the live site are currently clean per the product's own scan.
 
 - **2026-09-14 — Upstash Redis free-tier quota hit.** Upstash emailed that
   the `Vibecoder Scanner` database hit its free-tier cap of 500,000
