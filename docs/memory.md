@@ -754,3 +754,43 @@ Nothing actively in progress.
   scale, and avoids scans silently failing mid-month if the free quota
   is hit again. This requires adding a payment method, which only the
   user can do (Upstash Console → database → Upgrade).
+
+- **2026-09-14 — Closed out both production blockers for real, with SSH
+  access.** The user added an SSH key via DigitalOcean's Web Console
+  (browser-based console access, no prior SSH key existed on the client
+  machine) and gave the go-ahead for direct production changes.
+  - **Droplet code was stale.** `/opt/vibecoder-scanner` on
+    `vibecoder-scanner-worker` (143.110.251.145, BLR1) had no git repo —
+    it had been deployed via a one-off file copy — and was still running
+    the pre-swap Claude code (`worker/lib/claude-analysis.ts`,
+    `@anthropic-ai/sdk` in `package.json`). Fixed properly instead of
+    just patching around it: stopped the service, moved the old directory
+    aside (`/opt/vibecoder-scanner.old.<timestamp>`, not deleted),
+    `git clone`d the public GitHub repo fresh into `/opt/vibecoder-scanner`,
+    restored the `.env` (backed up first to `/root/vibecoder-scanner.env.bak`),
+    `npm install`ed, and restarted. The droplet now has a real git
+    history — future deploys are a `git pull` + `npm install` +
+    `systemctl restart vibecoder-worker`, not another manual copy.
+    `OPENAI_API_KEY` was set in that `.env` (replacing the old blank
+    `ANTHROPIC_API_KEY` line) in the same pass.
+  - **Confirmed the Upstash pay-as-you-go upgrade actually fixed the
+    quota error.** Right after the upgrade, the worker's `journalctl`
+    output — which had been spamming `ERR max requests limit exceeded`
+    on every `bzpopmin`/`evalsha` call in a tight retry loop for as long
+    as it had been broken — went completely silent, confirmed clean for
+    15+ seconds and staying that way.
+  - **Final end-to-end proof, not just component checks**: enqueued a
+    real scan (`fa08e7c7-fa7f-40a8-b0af-a882a71d53e7`) directly onto the
+    production Upstash queue against the live `hakscan.online` target,
+    the same queue the droplet's `vibecoder-worker.service` listens to.
+    Watched the droplet pick it up (`docker inspect` confirmed a real
+    `zaproxy/zap-stable` container starting at 12:03:43 UTC), run for
+    ~2 minutes, and complete. `audit_log`'s `scan.complete` entry:
+    `"aiAnalyzed": true, "findingCount": 7`, 0 findings remaining after
+    AI triage — identical shape to the local dev verification. This is
+    the real production pipeline (droplet worker + Upstash + OpenAI)
+    working end-to-end, not a local simulation of it.
+  - Both blockers tracked above (`OPENAI_API_KEY` on production, Upstash
+    quota) are now closed. Still open: PayPal sandbox→live and the Terms
+    of Service legal review — both require the user directly (PayPal
+    business KYC, an actual lawyer) and can't be closed by an AI session.
