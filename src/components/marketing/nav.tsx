@@ -3,7 +3,6 @@
 import { useRef, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { ShieldHalf } from "lucide-react";
 
 export function MarketingNav() {
   const navRef = useRef<HTMLDivElement>(null);
@@ -20,7 +19,7 @@ export function MarketingNav() {
       </div>
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
         <Link href="/" className="flex items-center gap-2 font-heading font-medium tracking-tight">
-          <ShieldHalf className="size-5 text-primary" strokeWidth={1.75} />
+          <img src="/brand/mark.svg" alt="" className="size-5" />
           <span>HAKSCAN</span>
         </Link>
         <nav

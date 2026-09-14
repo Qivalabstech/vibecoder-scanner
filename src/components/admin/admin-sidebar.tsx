@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutGrid, DollarSign, ShieldHalf, ArrowLeft } from "lucide-react";
+import { LayoutGrid, DollarSign, ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SignOutButton } from "@/components/dashboard/sign-out-button";
 
@@ -17,7 +17,7 @@ export function AdminSidebar({ email }: { email: string }) {
   return (
     <aside className="hidden w-64 shrink-0 flex-col border-r border-border bg-card/40 p-4 md:flex">
       <Link href="/admin" className="mb-1 flex items-center gap-2 px-2 font-heading font-medium tracking-tight">
-        <ShieldHalf className="size-5 text-primary" strokeWidth={1.75} />
+        <img src="/brand/mark.svg" alt="" className="size-5" />
         ADMIN_CONSOLE
       </Link>
       <p className="mb-6 px-2 font-heading text-[10px] tracking-widest text-severity-medium">

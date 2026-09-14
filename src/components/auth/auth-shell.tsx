@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { ShieldHalf } from "lucide-react";
 import { ScanVisual } from "@/components/three/scan-visual";
 import { BorderBeam } from "@/components/ui/border-beam";
 import { CyberGlitchText } from "@/components/ui/cyber-glitch-text";
@@ -21,7 +20,7 @@ export function AuthShell({
           <ScanVisual className="size-full" />
         </div>
         <div className="relative z-10 max-w-sm px-10 text-center">
-          <ShieldHalf className="mx-auto mb-6 size-10 text-primary" strokeWidth={1.5} />
+          <img src="/brand/mark.svg" alt="" className="mx-auto mb-6 size-10" />
           <p className="text-lg font-medium text-foreground/90">
             Every scan starts with <CyberGlitchText text="proof" scrambleDuration={30} /> it&apos;s
             yours to scan.
@@ -35,7 +34,7 @@ export function AuthShell({
       <div className="flex items-center justify-center px-6 py-16">
         <div className="w-full max-w-sm">
           <Link href="/" className="mb-10 flex items-center gap-2 font-semibold tracking-tight lg:hidden">
-            <ShieldHalf className="size-5 text-primary" strokeWidth={1.75} />
+            <img src="/brand/mark.svg" alt="" className="size-5" />
             Hakscan
           </Link>
           <h1 className="font-heading text-2xl font-medium tracking-tight">{title}</h1>
