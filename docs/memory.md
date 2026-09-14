@@ -695,3 +695,54 @@ Nothing actively in progress.
   and re-verify against production once deployed (the `pricing_config`
   migration and `SUPER_ADMIN_EMAILS` env var both need to exist on
   production too, not just local dev).
+
+- **2026-09-14 (continued)** — Switched the AI-analysis layer from Claude
+  to OpenAI (`gpt-4o-mini`, `worker/lib/ai-analysis.ts`, see the code
+  history for the full swap) and verified it for real with a live key,
+  not just a graceful-degradation check:
+  - Added a real `OPENAI_API_KEY` to local `.env.local`, restarted
+    `worker:dev`, and called `analyzeFindings()` directly with a synthetic
+    finding — got back a real, correctly-reasoned `gpt-4o-mini` response
+    (marked it a false positive with a plausible explanation/fix).
+  - Re-ran the actual dogfooding scan from the entry above
+    (`Qivalabstech/vibecoder-scanner`, via Semgrep+Gitleaks in Docker) with
+    the real key wired in. Confirmed via `audit_log`: the new scan's
+    `scan.complete` entry shows `"aiAnalyzed": true`, versus the earlier
+    pre-key scan's `"aiAnalyzed": false` — and both known findings
+    (`path-join-resolve-traversal`, `unsafe-formatstring`) came back
+    correctly marked as false positives by the AI and were deleted from
+    the findings table, exactly matching the manual analysis above. The
+    OpenAI integration is confirmed working end-to-end, not just
+    "compiles and doesn't throw."
+  - **Still open**: production's worker (the DigitalOcean droplet running
+    `vibecoder-worker.service`, per the 2026-09-11 entry) has not yet had
+    `OPENAI_API_KEY` added to its env — this session has no SSH
+    credentials for that droplet, so it's blocked on the user providing
+    them (or doing it themselves: add the key to whatever env file the
+    systemd unit loads, then `systemctl restart vibecoder-worker`).
+    Vercel does **not** need this key — `analyzeFindings` is only ever
+    called from `worker/index.ts`, never from any Next.js route.
+
+- **2026-09-14 — Upstash Redis free-tier quota hit.** Upstash emailed that
+  the `Vibecoder Scanner` database hit its free-tier cap of 500,000
+  commands/month. Traced the cause: **not** this session's local dev/test
+  activity — `.env.local`'s `REDIS_URL` points at a local Docker Redis
+  (`redis://localhost:6379`, started via `docker-compose.yml`), completely
+  separate from Upstash, so hours of local `worker:dev` testing today
+  (including a stretch where a stuck Docker Desktop VM left the worker
+  idling) never touched the Upstash quota at all. The real cause is almost
+  certainly the **production droplet worker**, which has been running
+  continuously since 2026-09-11 (per that entry) — BullMQ's built-in
+  stalled-job check polls Redis roughly every 30s for as long as the
+  worker process is alive, 24/7, independent of real scan volume, and
+  several days of that plus whatever real `enqueueScan` traffic hit the
+  Vercel app easily adds up to 500k. No code bug found (no stray
+  `QueueEvents` listener, no obviously-misconfigured polling interval) —
+  this is just the real, expected cost of an always-on BullMQ worker
+  against a free-tier Redis, and it will recur every month at this usage
+  level. **Recommendation given to the user**: upgrade Upstash to its
+  pay-as-you-go plan before relying on this for real customers — usage-
+  priced, expected to be a few dollars/month at any reasonable early
+  scale, and avoids scans silently failing mid-month if the free quota
+  is hit again. This requires adding a payment method, which only the
+  user can do (Upstash Console → database → Upgrade).
