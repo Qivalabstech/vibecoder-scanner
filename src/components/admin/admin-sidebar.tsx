@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { LayoutGrid, DollarSign, ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SignOutButton } from "@/components/dashboard/sign-out-button";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 const links = [
   { href: "/admin", label: "Overview", icon: LayoutGrid },
@@ -51,7 +52,10 @@ export function AdminSidebar({ email }: { email: string }) {
         </Link>
       </nav>
       <div className="mt-auto space-y-2 border-t border-border pt-4">
-        <p className="truncate px-2 text-xs text-muted-foreground">{email}</p>
+        <div className="flex items-center justify-between gap-2 px-2">
+          <p className="truncate text-xs text-muted-foreground">{email}</p>
+          <ThemeToggle />
+        </div>
         <SignOutButton />
       </div>
     </aside>

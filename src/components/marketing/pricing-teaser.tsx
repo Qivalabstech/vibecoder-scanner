@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Check } from "lucide-react";
 import { BorderBeam } from "@/components/ui/border-beam";
+import { Wordmark } from "@/components/brand/wordmark";
 
 export function PricingTeaser({ proPriceUsd }: { proPriceUsd: number }) {
   const tiers = [
@@ -32,7 +33,7 @@ export function PricingTeaser({ proPriceUsd }: { proPriceUsd: number }) {
   return (
     <section id="pricing" className="mx-auto max-w-4xl px-6 py-24">
       <div className="mx-auto mb-14 max-w-xl text-center">
-        <img src="/brand/logo-stacked-for-dark-surfaces.svg" alt="Hakscan" className="mx-auto mb-6 h-16 w-auto" />
+        <Wordmark size="sm" className="mb-6" />
         <h2 className="text-3xl font-semibold tracking-tight">Simple pricing</h2>
         <p className="mt-3 text-muted-foreground">Start free. Upgrade when you have more than one thing to protect.</p>
       </div>

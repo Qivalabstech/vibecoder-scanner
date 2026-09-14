@@ -9,6 +9,7 @@ import { GithubIcon } from "@/components/icons/github-icon";
 import { TypedText } from "@/components/typed-text";
 import { CyberGlitchText } from "@/components/ui/cyber-glitch-text";
 import { BorderBeam } from "@/components/ui/border-beam";
+import { Wordmark } from "@/components/brand/wordmark";
 
 export function MarketingHero() {
   return (
@@ -20,14 +21,13 @@ export function MarketingHero() {
       </div>
 
       <div className="mx-auto flex max-w-4xl flex-col items-center px-6 pb-28 pt-24 text-center">
-        <motion.img
-          src="/brand/logo-stacked-for-dark-surfaces.svg"
-          alt="Hakscan"
+        <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="mb-8 h-24 w-auto"
-        />
+        >
+          <Wordmark className="mb-8" />
+        </motion.div>
 
         <motion.div
           initial={{ opacity: 0, y: 8 }}

@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export function MarketingNav() {
   const navRef = useRef<HTMLDivElement>(null);
@@ -47,6 +48,7 @@ export function MarketingNav() {
           </Link>
         </nav>
         <div className="flex items-center gap-1 sm:gap-2">
+          <ThemeToggle className="max-sm:size-7" />
           <Button variant="ghost" className="max-sm:h-7 max-sm:px-2 max-sm:text-xs" render={<Link href="/login" />}>
             Log in
           </Button>
