@@ -32,6 +32,7 @@ export function PricingTeaser({ proPriceUsd }: { proPriceUsd: number }) {
   return (
     <section id="pricing" className="mx-auto max-w-4xl px-6 py-24">
       <div className="mx-auto mb-14 max-w-xl text-center">
+        <img src="/brand/logo-stacked-for-dark-surfaces.svg" alt="Hakscan" className="mx-auto mb-6 h-16 w-auto" />
         <h2 className="text-3xl font-semibold tracking-tight">Simple pricing</h2>
         <p className="mt-3 text-muted-foreground">Start free. Upgrade when you have more than one thing to protect.</p>
       </div>
