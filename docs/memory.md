@@ -794,3 +794,39 @@ Nothing actively in progress.
     quota) are now closed. Still open: PayPal sandbox→live and the Terms
     of Service legal review — both require the user directly (PayPal
     business KYC, an actual lawyer) and can't be closed by an AI session.
+
+- **2026-09-14 — PayPal flipped to live and verified for real.** User
+  created a real live PayPal app + a live `$24/mo` "Pro Plan" subscription
+  plan (`total_cycles: 0`, unlimited — matches the app's no-deferred-
+  cancellation design) + a live webhook subscribed to exactly the 5 event
+  types `src/app/api/billing/webhook/route.ts` actually handles
+  (`BILLING.SUBSCRIPTION.ACTIVATED`, `PAYMENT.SALE.COMPLETED`,
+  `BILLING.SUBSCRIPTION.CANCELLED`, `BILLING.SUBSCRIPTION.EXPIRED`,
+  `BILLING.SUBSCRIPTION.SUSPENDED`).
+  - Verified the live plan's actual price via the live PayPal API before
+    trusting it (same pattern as the earlier sandbox check): fixed price
+    really is `$24.00 USD`/month, `status: ACTIVE`.
+  - Updated all 6 PayPal-related env vars in Vercel production
+    (`PAYPAL_ENV=live`, `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`,
+    `PAYPAL_PLAN_ID`, `PAYPAL_WEBHOOK_ID`, `NEXT_PUBLIC_PAYPAL_CLIENT_ID`)
+    via the dashboard (Vercel's env-var edit textarea silently appends
+    rather than replaces if you type before its async load finishes —
+    hit this once, caught it by screenshotting before saving, fixed with
+    a triple-click-to-select-all instead of relying on Cmd+A timing) and
+    redeployed.
+  - **Real end-to-end proof, not just "it deployed"**: logged into
+    `hakscan.online/settings/billing` as `tech@qivalabs.com` and clicked
+    "Upgrade to Pro" for real. First click hit `POST
+    /api/billing/subscribe → 401 unauthorized` — investigated rather than
+    ignored, but a clean reload + a second click succeeded (`200`,
+    real subscription id `I-BKYL586D78YH` created via the live API), and
+    the PayPal button rendered correctly with zero CSP/console errors.
+    Concluded the 401 was a one-off session-refresh timing glitch on the
+    first request after a fresh login, not a code bug — worth watching
+    for recurrence, not worth chasing further on a single instance.
+    Deliberately did **not** click through the actual PayPal button to
+    approve the subscription — that would be a real charge, left for the
+    user to trigger intentionally with their own card.
+  - Remaining before a real public launch: only the Terms of Service
+    legal review (`docs/rules.md`'s "draft, pending legal review" banner)
+    — every infra/billing blocker tracked in this file is now closed.
