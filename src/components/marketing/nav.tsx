@@ -17,7 +17,7 @@ export function MarketingNav() {
           <span>OPERATOR CONSOLE // STATUS: ONLINE</span>
         </div>
       </div>
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
+      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
         <Link href="/" className="flex items-center gap-2 font-heading font-medium tracking-tight">
           <img src="/brand/mark.svg" alt="" className="size-5" />
           <span>HAKSCAN</span>
@@ -46,11 +46,14 @@ export function MarketingNav() {
             [ PRICING ]
           </Link>
         </nav>
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" render={<Link href="/login" />}>
+        <div className="flex items-center gap-1 sm:gap-2">
+          <Button variant="ghost" className="max-sm:h-7 max-sm:px-2 max-sm:text-xs" render={<Link href="/login" />}>
             Log in
           </Button>
-          <Button render={<Link href="/signup" />}>Start a free scan</Button>
+          <Button className="max-sm:h-7 max-sm:px-2 max-sm:text-xs" render={<Link href="/signup" />}>
+            <span className="sm:hidden">Scan free</span>
+            <span className="hidden sm:inline">Start a free scan</span>
+          </Button>
         </div>
       </div>
     </header>
