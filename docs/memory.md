@@ -830,3 +830,25 @@ Nothing actively in progress.
   - Remaining before a real public launch: only the Terms of Service
     legal review (`docs/rules.md`'s "draft, pending legal review" banner)
     — every infra/billing blocker tracked in this file is now closed.
+
+- **2026-09-14 — Real brand kit wired in, replacing the lucide `ShieldHalf`
+  placeholder logo everywhere.** User supplied a full brand kit
+  (`~/Downloads/Hakscan-Brandkit/`: svg/png marks and wordmarks, a
+  ready-made favicon set at every standard size, brand fonts). Installed
+  `favicon.ico`/`icon.png`/`apple-icon.png` via Next's App Router file
+  convention (drop into `src/app/`, auto-detected, no `layout.tsx`
+  metadata changes needed) and copied the icon-only mark SVG to
+  `public/brand/mark.svg`, then swapped it in for every `ShieldHalf`
+  usage that was standing in for the brand logo (marketing nav, footer,
+  dashboard sidebar, admin sidebar, both auth-shell spots) — left the
+  unrelated `ShieldCheck` "verified" badge icons on target cards alone,
+  those aren't the logo. Verified visually in the browser (nav + login
+  page render correctly, zero console errors) and confirmed via `curl`
+  that the favicon files actually serve the new byte-for-byte assets, not
+  a cached default. **Not yet done, flagged for later**: the brand kit
+  also includes real brand fonts (JetBrains Mono weights) and full
+  horizontal/stacked wordmark lockups (SVG text baked in at "JetBrains
+  Mono") — the site currently loads Geist Sans/Mono instead, so those
+  wordmark assets would render with a font mismatch if used as-is.
+  Swapping the site's typography to match the brand kit's fonts is a
+  separate, bigger decision than "install the logo" and wasn't done here.
