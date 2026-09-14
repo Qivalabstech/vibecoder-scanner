@@ -20,10 +20,19 @@ export function MarketingHero() {
       </div>
 
       <div className="mx-auto flex max-w-4xl flex-col items-center px-6 pb-28 pt-24 text-center">
-        <motion.div
+        <motion.img
+          src="/brand/logo-stacked-for-dark-surfaces.svg"
+          alt="Hakscan"
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
+          className="mb-8 h-24 w-auto"
+        />
+
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.03 }}
           className="mb-6 inline-flex items-center gap-2 rounded-md border border-border bg-card/60 px-3 py-1 font-heading text-xs tracking-wide text-muted-foreground"
         >
           <span className="size-1.5 rounded-full bg-primary shadow-[0_0_6px] shadow-primary animate-pulse" />
