@@ -870,3 +870,52 @@ Nothing actively in progress.
   real `jbm` font family (not a fallback), the whole page now reads as
   one consistent monospace typeface, zero console errors beyond the
   expected Turbopack dev-mode HMR websocket noise.
+
+- **2026-09-14 — Mobile/tablet/desktop responsive audit, and a real dark
+  mode toggle built from scratch.** Checked the live production site at
+  375px, 768px, and 1100-1440px:
+  - Found and fixed a real mobile bug: the JetBrains Mono swap made
+    "HAKSCAN" + "Log in" + "Start a free scan" too wide for a 375px nav
+    — `justify-between` had zero space left, so the logo touched the
+    login button with no gap. Fixed with `max-sm:`-scoped padding/size
+    overrides on `src/components/marketing/nav.tsx` and a shorter "Scan
+    free" label below `sm`; desktop untouched. Pushed and verified live.
+  - Tablet (768px) and desktop (1100-1440px, including the auth page's
+    `lg:` split-screen layout, never actually checked at true desktop
+    width before) both came back clean, zero console errors.
+  - **Then asked to check the dark mode toggle — turned out there wasn't
+    one.** `layout.tsx`'s inline script reads `localStorage.getItem("theme")`
+    and `globals.css` has a complete `.dark` token block, but nothing
+    anywhere in the codebase ever called `localStorage.setItem` or
+    toggled the class — fully dead, unreachable code, confirmed by
+    searching the whole live site for any theme-related control (found
+    none). User chose to build a real one rather than leave it dark-only
+    or just flag it.
+  - Built `src/components/theme-toggle.tsx`: no React state at all — both
+    Sun/Moon icons render in the DOM always, `dark:` CSS variants pick
+    the visible one, so it can never hydration-mismatch against the
+    inline script that already sets the `dark` class before paint. Wired
+    into the marketing nav and both dashboard/admin sidebars.
+  - **Turning it on for real immediately surfaced a second, deeper bug**:
+    the stacked wordmark used in the hero and pricing section
+    (`logo-stacked-for-dark-surfaces.svg`) has "hak" baked as near-white
+    fill directly in the SVG — completely illegible the moment light
+    mode became actually reachable. The brand kit has separate
+    light/dark `wordmark-only-*.svg` text assets but no light-surface
+    *stacked* lockup, so built `src/components/brand/wordmark.tsx`
+    instead: the theme-agnostic icon mark plus a theme-swapped wordmark
+    text image (same `dark:` CSS trick as the toggle itself), replacing
+    the single baked-dark-only composite everywhere it was used. Deleted
+    the now-unused asset. Verified both directions in the browser: light
+    mode genuinely applies (computed `--background` flips to near-white,
+    confirmed a fresh page load correctly restored dark since that
+    session's toggle click had left `localStorage` on "light" —
+    the persistence itself works), wordmark legible in both, zero
+    console errors either way.
+  - Lesson for later: an intermittent screenshot-tool glitch in this
+    session (a stale/black frame despite a real successful state change)
+    briefly looked like the toggle didn't work at first — resolved by
+    checking `getComputedStyle`/`localStorage` directly via
+    `javascript_tool` rather than trusting one screenshot, and by forcing
+    a full page reload for a clean repaint. Don't conclude a fix failed
+    from a single suspicious screenshot alone.
