@@ -852,3 +852,21 @@ Nothing actively in progress.
   wordmark assets would render with a font mismatch if used as-is.
   Swapping the site's typography to match the brand kit's fonts is a
   separate, bigger decision than "install the logo" and wasn't done here.
+
+- **2026-09-14 (continued) — Font swap done too.** Brand guidelines
+  (`Hakscan-Brand-Guidelines.html`) are explicit: "One typeface, three
+  weights" — JetBrains Mono for both headings and body, deliberately not
+  paired with a second sans font ("reads as a tool built by engineers,
+  for engineers"). Loaded the three brand font files
+  (`src/app/fonts/jbm-{regular,medium,bold}.ttf`) via `next/font/local`
+  under one `--font-jbm` variable, replacing the Geist Sans + Geist Mono
+  Google-font setup entirely. While rewiring `globals.css`'s `--font-sans`/
+  `--font-mono`/`--font-heading` tokens to point at it, also fixed a
+  latent bug found in passing: `--font-sans` was defined as
+  `var(--font-sans)` — a circular reference — so body text had never
+  actually been rendering as Geist Sans, just silently falling back to
+  the browser's default sans-serif the whole time. Verified in the
+  browser: `getComputedStyle` on both `body` and `h1` resolves to the
+  real `jbm` font family (not a fallback), the whole page now reads as
+  one consistent monospace typeface, zero console errors beyond the
+  expected Turbopack dev-mode HMR websocket noise.
