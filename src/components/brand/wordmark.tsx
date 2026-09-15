@@ -20,7 +20,7 @@ export function Wordmark({ size = "default", className }: { size?: "default" | "
   const textClass = size === "sm" ? "h-5" : "h-8";
 
   return (
-    <div className={cn(className)} role="img" aria-label="Hakscan">
+    <div className={cn("flex justify-center", className)} role="img" aria-label="Hakscan">
       <img
         src="/brand/wordmark-only-dark.svg"
         alt=""
