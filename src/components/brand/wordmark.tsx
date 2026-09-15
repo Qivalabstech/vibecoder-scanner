@@ -4,15 +4,19 @@ import { cn } from "@/lib/utils";
 // kit's light/dark wordmark-only assets (dark surfaces bake "hak" as
 // near-white, illegible if rendered on a light background and vice versa).
 //
-// The source SVGs carry their own raw width/height attributes (620x100) —
-// if the stylesheet is ever blocked, delayed, or fails (ad blockers, slow
-// connections), a bare <img> falls back to that intrinsic pixel size: a
-// 620px-wide banner. Setting explicit width/height HTML attributes (not
-// just Tailwind classes) makes the correct small size the default the
-// browser uses, with CSS only refining from there.
+// The source SVGs carry their own raw width/height attributes (300x100,
+// tightly cropped to the actual text bounding box — see the 2026-09-16
+// memory entry on why this matters: a viewBox wider than the visible
+// glyphs makes the *image* center correctly while the *text inside it*
+// still reads as off-center, since the empty canvas space gets centered
+// along with it) — if the stylesheet is ever blocked, delayed, or fails
+// (ad blockers, slow connections), a bare <img> falls back to that
+// intrinsic pixel size. Setting explicit width/height HTML attributes
+// (not just Tailwind classes) makes the correct small size the default
+// the browser uses, with CSS only refining from there.
 const SIZES = {
-  default: { textW: 198, textH: 32 }, // h-8, text at 620:100 aspect
-  sm: { textW: 124, textH: 20 }, // h-5
+  default: { textW: 96, textH: 32 }, // h-8, text at 300:100 aspect
+  sm: { textW: 60, textH: 20 }, // h-5
 } as const;
 
 export function Wordmark({ size = "default", className }: { size?: "default" | "sm"; className?: string }) {
