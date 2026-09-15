@@ -4,8 +4,7 @@ export function MarketingFooter() {
   return (
     <footer className="border-t border-border/60 py-10">
       <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-4 px-6 sm:flex-row sm:items-center">
-        <Link href="/" className="flex items-center gap-2 font-heading text-sm font-medium tracking-tight">
-          <img src="/brand/mark.svg" alt="" width={16} height={16} className="size-4" />
+        <Link href="/" className="font-heading text-sm font-medium tracking-tight">
           HAKSCAN
         </Link>
         <div className="text-sm text-muted-foreground">

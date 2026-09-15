@@ -19,8 +19,7 @@ export function MarketingNav() {
         </div>
       </div>
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
-        <Link href="/" className="flex items-center gap-2 font-heading font-medium tracking-tight">
-          <img src="/brand/mark.svg" alt="" width={20} height={20} className="size-5" />
+        <Link href="/" className="font-heading font-medium tracking-tight">
           <span>HAKSCAN</span>
         </Link>
         <nav

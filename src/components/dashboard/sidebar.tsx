@@ -18,8 +18,7 @@ export function DashboardSidebar({ email, isAdmin }: { email: string; isAdmin?: 
 
   return (
     <aside className="hidden w-64 shrink-0 flex-col border-r border-border/60 bg-card/40 p-4 md:flex">
-      <Link href="/" className="mb-8 flex items-center gap-2 px-2 font-heading font-medium tracking-tight">
-        <img src="/brand/mark.svg" alt="" width={20} height={20} className="size-5" />
+      <Link href="/" className="mb-8 px-2 font-heading font-medium tracking-tight">
         Hakscan
       </Link>
       <nav className="flex flex-1 flex-col gap-1">
