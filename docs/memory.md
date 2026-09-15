@@ -919,3 +919,33 @@ Nothing actively in progress.
     `javascript_tool` rather than trusting one screenshot, and by forcing
     a full page reload for a clean repaint. Don't conclude a fix failed
     from a single suspicious screenshot alone.
+
+- **2026-09-15 — Admin console checked (desktop clean; mobile viewport
+  emulation was unreliable this session — another concurrent session
+  appeared to share/contend for the same browser pane's viewport state,
+  so a true isolated 375px test couldn't be obtained). Confirmed no
+  actual horizontal overflow either way (`scrollWidth` always equalled
+  `innerWidth`). One real, pre-existing (not newly introduced) gap:
+  `AdminSidebar` is `hidden md:flex`, same as `DashboardSidebar` — no
+  mobile nav fallback for the authenticated app. Decision: leave as-is —
+  admin is realistically a desktop-only task for the one user who has
+  access, and building a mobile nav for it is a bigger scope call than
+  the audit warranted. Revisit only if this actually becomes a problem
+  in practice.
+
+- **2026-09-15 — Terms of Service: filled in the two real placeholders.**
+  Sections 13 (governing law) and 14 (contact) said "to be finalized
+  during legal review" / "to be added". Per the user: governing law is
+  **India**, contact is **tech@qivalabs.com**. Left the exact
+  city/court venue for exclusive jurisdiction as an explicit
+  placeholder — the user only confirmed the country, not the specific
+  registered-entity city a lawyer would need to name precisely. The
+  top "draft, pending legal review" banner is deliberately untouched —
+  per `docs/rules.md`'s AI boundary on this file, a fuller draft is not
+  the same as an actual lawyer's sign-off, and this session cannot
+  provide that sign-off regardless of how complete the draft gets.
+  **This was the last item genuinely blocking a real public launch** —
+  everything else tracked in this file (OpenAI, Upstash, PayPal live,
+  brand kit, responsive/theme audit) is closed. What remains before
+  launch is entirely non-technical: getting this draft in front of an
+  actual lawyer.
