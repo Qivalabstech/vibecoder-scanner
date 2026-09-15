@@ -130,11 +130,21 @@ export default function TermsPage() {
 
       <h2 className="mt-8 text-xl font-semibold">13. Governing law</h2>
       <p className="text-muted-foreground">
-        Governing law and jurisdiction to be finalized during legal review.
+        These Terms are governed by the laws of India, without regard to
+        conflict-of-law principles. Any dispute arising from these Terms or
+        the Service will be subject to the exclusive jurisdiction of the
+        courts of India. This clause is a placeholder pending legal
+        review &mdash; the specific state/city for exclusive jurisdiction
+        (e.g. the city where the operating entity is registered) still
+        needs to be confirmed by counsel.
       </p>
 
       <h2 className="mt-8 text-xl font-semibold">14. Contact</h2>
-      <p className="text-muted-foreground">Contact details to be added.</p>
+      <p className="text-muted-foreground">
+        For questions about these Terms, or to report a security or abuse
+        concern, contact{" "}
+        <a href="mailto:tech@qivalabs.com">tech@qivalabs.com</a>.
+      </p>
     </div>
   );
 }
