@@ -1,0 +1,20 @@
+# Hakscan
+
+> Security scanning for AI-built apps. Connect a GitHub repo or live site, prove you own it, and get real security tools (Semgrep, Gitleaks, a passive OWASP ZAP baseline) run against it — with results triaged and explained in plain language by AI, not raw scanner output.
+
+Hakscan exists for "vibecoders" — founders who ship apps built with AI coding tools and don't have a security background. Ownership verification (GitHub OAuth admin access, or a DNS/meta-tag challenge for sites) is enforced server-side before any scan runs; nothing here scans a target the user doesn't control. Live-site scans are passive/baseline only — no active exploitation.
+
+## Product
+
+- Free plan: 1 target, manual scans only.
+- Pro plan: $24/month, unlimited targets, scheduled re-scans, priority queue, full PDF reports and email alerts.
+- Sign up: /signup
+- Log in: /login
+
+## Policies
+
+- Terms of Service: /legal/terms
+
+## For AI agents and crawlers
+
+This file exists because Hakscan's own audience is AI-assisted builders — it's a natural fit for agent-readable discovery, not just a formality. There is no API for third-party automated scanning; scans are triggered by an authenticated user through the dashboard after ownership verification, and that gate is intentional and non-negotiable.
