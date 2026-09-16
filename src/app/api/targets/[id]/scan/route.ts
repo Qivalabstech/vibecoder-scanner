@@ -4,6 +4,7 @@ import { createServiceClient } from "@/lib/supabase/service";
 import { logAudit } from "@/lib/audit";
 import { enqueueScan } from "@/lib/queue";
 import { isOverScanRateLimit } from "@/lib/rate-limit";
+import { isPubliclyRoutableHostname } from "@/lib/ssrf-guard";
 
 export async function POST(_request: Request, ctx: RouteContext<"/api/targets/[id]/scan">) {
   const { id } = await ctx.params;
@@ -27,6 +28,30 @@ export async function POST(_request: Request, ctx: RouteContext<"/api/targets/[i
       { error: "target_not_verified", message: "Verify ownership of this target before scanning." },
       { status: 403 }
     );
+  }
+
+  // Re-checked here, not just at verification time: DNS ownership proof
+  // doesn't prevent someone from pointing their own domain at an
+  // internal/cloud-metadata IP, and this is the last gate before the ZAP
+  // container gets real network access to whatever this resolves to now
+  // (DNS could also have changed since the target was verified).
+  if (target.type === "site") {
+    const hostname = new URL(target.identifier).hostname;
+    if (!(await isPubliclyRoutableHostname(hostname))) {
+      await logAudit({
+        userId: user.id,
+        targetId: target.id,
+        action: "scan.trigger.denied",
+        metadata: { reason: "target_not_publicly_routable" },
+      });
+      return NextResponse.json(
+        {
+          error: "target_not_publicly_routable",
+          message: "This target doesn't resolve to a public address and can't be scanned.",
+        },
+        { status: 403 }
+      );
+    }
   }
 
   if (await isOverScanRateLimit(user.id)) {
