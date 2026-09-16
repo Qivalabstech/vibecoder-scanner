@@ -1,5 +1,64 @@
 # Memory
 
+## Current state (2026-09-16, dogfooding round 3: fixed the real homepage caching bug, tried and reverted a CSP fix)
+
+Re-scanned hakscan.online with itself (user asked to leave promo codes
+alone and go fix findings). Same 6 findings as the 09-14 scan: High CSP
+`script-src unsafe-inline`; Medium "Retrieved from Cache",
+COOP/COEP "Missing or Invalid"; Low "Non-Storable Content",
+"Storable but Non-Cacheable Content".
+
+**Not touching (already-decided, still correct) tradeoffs**:
+- COEP staying unset and COOP staying at `same-origin-allow-popups`
+  (not strict `same-origin`) are the 09-14 session's own deliberate,
+  tested calls — enabling either the scanner's suggested way breaks
+  PayPal's checkout iframe/popup. ZAP just doesn't recognize the relaxed
+  COOP value as "valid".
+- "Retrieved from Cache" (Medium) — false positive. The homepage has
+  zero sensitive/user-specific content; ZAP is flagging the presence of
+  an `Age` header, which any CDN (Vercel's edge, here) adds regardless
+  of whether the content is actually sensitive.
+
+**Real fix — the homepage's caching architecture**: `/` was being
+server-rendered dynamically (Next build showed `ƒ /`, confirmed via
+`npx next build`'s route table) purely because `src/app/page.tsx` used
+the cookie-based Supabase server client (`lib/supabase/server.ts`,
+which calls `cookies()` unconditionally) just to read `pricing_config`
+for the pricing teaser — a table that's genuinely public
+(`pricing is publicly readable` RLS policy, migration 0008). Calling
+`cookies()` anywhere in a page's render forces that whole page dynamic
+in Next's App Router, which is also why it got a `no-store` Cache-Control
+by default — this is what both Low findings and one instance of the
+"Retrieved from Cache" evidence were actually about.
+Fix: **`src/lib/supabase/public.ts`** — new, an anon-key client with no
+cookie access, for exactly this case (server-rendered reads of data RLS
+already makes public). `src/app/page.tsx` now uses it instead of the
+cookie-based client. Verified with `npx next build`: `/` now shows `○`
+(static) instead of `ƒ` (dynamic) in the route table — a real
+architecture fix, not a header override.
+
+**Tried and reverted — CSP `script-src unsafe-inline` (High)**: the
+finding's own advice ("move inline scripts to external files") looked
+promising, so moved the one inline script this app actually authors
+(`themeInitScript` in `layout.tsx`) to `public/theme-init.js` and
+dropped `'unsafe-inline'` from `next.config.ts`'s CSP. **Verified this
+was wrong before shipping it** — built production (`next build` +
+`next start`) and checked the real browser console: React error #412
+and a wall of CSP violations, because Next.js App Router itself injects
+inline `self.__next_f.push(...)` scripts to stream RSC payloads for
+hydration, and those got blocked too — the whole app silently lost all
+interactivity (theme toggle, every button, every client component).
+The only real fix for this finding is nonce-based CSP via `proxy.ts`,
+and Next's own docs are explicit that nonces require **every page using
+one to render dynamically** — which would undo the homepage static-
+rendering fix above (and force it onto every other page) for one
+scanner finding whose only realistic exploit path already requires an
+attacker who can inject markup into the page in the first place. Not a
+good trade. Reverted both the `layout.tsx` extraction and the CSP
+change back to exactly what they were — `git diff` on `layout.tsx` is
+now empty. Documented the reasoning directly in `next.config.ts`'s
+comment so this isn't re-attempted without knowing why it was reverted.
+
 ## Current state (2026-09-16, promo codes feature + scan-report overflow fix)
 
 Two things from checking the scan flow and building promo codes:

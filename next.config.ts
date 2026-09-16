@@ -3,8 +3,16 @@ import path from "path";
 
 // PayPal's JS SDK renders its buttons in a cross-origin iframe and needs
 // script/frame/connect access; Supabase needs connect-src for auth+data.
-// The inline theme-init script in src/app/layout.tsx needs script-src
-// 'unsafe-inline' until it's worth plumbing a per-request nonce through.
+// script-src keeps 'unsafe-inline' — tried removing it (moving the
+// inline theme-init script to an external file) and confirmed empirically
+// it's not enough: Next.js App Router injects its own inline
+// `self.__next_f.push(...)` scripts to stream RSC payloads for
+// hydration, and those get blocked too, breaking hydration app-wide
+// (React error #412, every client component silently non-interactive).
+// The only real fix is nonce-based CSP via proxy.ts, which requires
+// *every* page using the nonce to render dynamically — that would undo
+// the homepage's static rendering (see page.tsx / lib/supabase/public.ts)
+// for one Medium/informational scanner finding, not a good trade.
 // React/Turbopack's dev-mode tooling needs eval() for HMR and debugging —
 // never shipped in production, so scope it to dev only rather than
 // weakening the production CSP.
