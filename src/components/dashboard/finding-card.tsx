@@ -35,7 +35,7 @@ export function FindingCard({ finding }: { finding: FindingRow }) {
         className="flex w-full items-center gap-3 px-4 py-3 text-left"
       >
         <SeverityBadge severity={finding.severity} />
-        <span className="flex-1 truncate font-medium">{finding.title}</span>
+        <span className="min-w-0 flex-1 truncate font-medium">{finding.title}</span>
         {finding.file_path && (
           <span className="hidden truncate text-xs text-muted-foreground sm:block">
             {finding.file_path}
