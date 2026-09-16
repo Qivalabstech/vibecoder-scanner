@@ -1,5 +1,93 @@
 # Memory
 
+## Current state (2026-09-16, security hardening pass — beyond what the passive scanner catches)
+
+User's framing: it shouldn't be the case that we scan other people's
+repos for bugs while our own site has real ones the scanner can't see.
+ZAP baseline is passive-only by design (Phase 8's non-negotiable), so
+this pass looked specifically for the classes of bug a passive scanner
+structurally cannot find — dependency CVEs, access control, SSRF,
+open redirect — via direct code/dependency review, not another scan.
+
+**Critical — patched**: `npm audit` showed Next.js 16.3.2 (the version
+actually deployed) carries a **critical unauthenticated RCE**
+(GHSA-p293-qw3h-jr36, plus a second RCE in the Image Optimization API
+for AVIF files). Upgraded to `next@16.3.5` (patched). Also cleared 2
+remaining moderate/high advisories (`js-yaml`, `qs` — both transitive
+dev-tooling deps of `eslint`/`shadcn` CLI, never shipped to production,
+still patched via `npm audit fix` for hygiene). `npm audit`: 0
+vulnerabilities. Rebuilt + typechecked clean after the bump; `/` still
+prerenders static.
+
+**High — SSRF, fixed**: `checkMetaTag()` (site-ownership verification,
+`lib/verification.ts`) and the ZAP baseline scanner
+(`worker/scanners/site-scan.ts`, invoked from
+`/api/targets/[id]/scan`) both fetch a user-submitted URL server-side
+with no restriction on what it resolves to. **DNS ownership proof is
+not a safety proof** — nothing stops someone from verifying a domain
+they genuinely own that's pointed at `169.254.169.254` (the cloud
+metadata IP on every major provider) or an internal address, then
+using the product's own intended verify → scan flow to make our
+infrastructure fetch it, with the ZAP container getting real network
+access. New **`src/lib/ssrf-guard.ts`** — `isPubliclyRoutableHostname()`
+resolves a hostname and rejects if any resolved address falls in a
+private/reserved/loopback/link-local range (RFC1918, CGNAT, metadata
+IP, IPv6 loopback/link-local/unique-local); fails closed on DNS errors
+or an empty result. Wired in at two points: `checkMetaTag()` (checks
+before the initial fetch, and again before following any redirect —
+switched `redirect: "follow"` to `"manual"` with an explicit re-check
+so a public host redirecting to an internal one doesn't bypass this),
+and `/api/targets/[id]/scan` for `type === "site"` targets, re-checked
+right before enqueueing — this second check matters independently of
+the first since DNS can change between verification and scan time.
+**Known remaining gap, stated honestly rather than overclaiming**: this
+closes the request-time TOCTOU window but doesn't fully defend against
+DNS rebinding *mid-request* (an attacker's resolver returning a public
+IP for our lookup, then a private one for the actual fetch/connect a
+moment later) — closing that completely needs a resolver-pinning fetch
+implementation, which this pass didn't build.
+
+**Medium — open redirect, fixed**: `/auth/callback`'s `next` query
+param was concatenated straight into a server-side
+`NextResponse.redirect()` with no validation — a param on a link that
+could arrive from anywhere, including a phishing email built around a
+real `hakscan.online/auth/callback?next=...` URL. Added a
+same-origin-relative-path check (`starts with "/"`, not `"//"`, no
+`"://"`) in both `auth/callback/route.ts` (server, the actual HTTP
+redirect — the real risk) and `login-form.tsx` (client-side
+`router.replace()`, lower risk since Next's router doesn't perform
+cross-origin navigation for arbitrary strings, but hardened for
+consistency since it reads the exact same attacker-controlled param).
+
+**Medium — promo code enumeration, fixed** (self-review of the promo
+codes feature built earlier this session, before it's even live): the
+validate endpoint only required being logged in and had no rate limit,
+making it a free oracle for discovering unpublished codes and their
+discount value, or squatting a scarce redemption slot meant for a
+partner. Added `isOverPromoValidateRateLimit()` to `lib/rate-limit.ts`
+(20/hour per user, same DB-count pattern as the existing scan-trigger
+throttle) and wired it into `/api/billing/promo/validate`.
+
+**Reviewed and confirmed already correct, not changed**: RLS policies
+on `scans`/`findings`/`targets` (properly scoped to `auth.uid()` via
+joins, no `using (true)` patterns — the pages/routes that query them
+via the cookie-scoped client, like `/scans/[id]`, rely entirely on
+this and it holds up); PayPal webhook (verifies signature against raw
+bytes before trusting anything, fails closed if unconfigured);
+`/api/github/repos` (token never leaves the server, scoped to the
+caller's own `github_connections` row); repo cloning (hardcoded to
+`github.com`, `fullName` both zod-validated and re-checked against the
+live GitHub API before use — no SSRF surface there, unlike the site
+scanner); no `.env*` file ever committed to git history; no hardcoded
+secrets found via pattern grep across `src/`/`worker/`.
+
+**Noted, not fixed (low priority, real but minor)**: ~9 API routes
+return raw Postgres/Supabase `error.message` directly to the client on
+failure (schema/constraint-name disclosure, not a data-access issue —
+callers can only trigger these on operations scoped to their own
+data). Left as-is this pass; worth a follow-up if pursuing this
+further.
+
 ## Current state (2026-09-16, dogfooding round 3: fixed the real homepage caching bug, tried and reverted a CSP fix)
 
 Re-scanned hakscan.online with itself (user asked to leave promo codes

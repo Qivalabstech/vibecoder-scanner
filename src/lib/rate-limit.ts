@@ -1,6 +1,7 @@
 import { createServiceClient } from "@/lib/supabase/service";
 
 const SCAN_TRIGGERS_PER_HOUR = 5;
+const PROMO_VALIDATE_ATTEMPTS_PER_HOUR = 20;
 
 /**
  * Blunt per-user throttle so the scanner can't be turned into a free port
@@ -22,4 +23,27 @@ export async function isOverScanRateLimit(userId: string): Promise<boolean> {
     .gte("created_at", oneHourAgo);
 
   return (count ?? 0) >= SCAN_TRIGGERS_PER_HOUR;
+}
+
+/**
+ * The promo validate endpoint is read-only (doesn't burn a redemption
+ * slot) and only requires being logged in, which makes it an
+ * enumeration target: a real account could otherwise hammer it to
+ * discover unpublished codes and their discount value, or find one to
+ * immediately redeem out from under whatever partner it was actually
+ * meant for. Same blunt per-user hourly count as the scan trigger
+ * throttle, counted off audit_log rather than a dedicated table.
+ */
+export async function isOverPromoValidateRateLimit(userId: string): Promise<boolean> {
+  const service = createServiceClient();
+  const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+
+  const { count } = await service
+    .from("audit_log")
+    .select("*", { count: "exact", head: true })
+    .eq("user_id", userId)
+    .eq("action", "billing.promo.validate_attempt")
+    .gte("created_at", oneHourAgo);
+
+  return (count ?? 0) >= PROMO_VALIDATE_ATTEMPTS_PER_HOUR;
 }
