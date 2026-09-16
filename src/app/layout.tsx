@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
+import Script from "next/script";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
+
+const GA_MEASUREMENT_ID = "G-EV1X42GRGN";
 
 // Brand typeface: JetBrains Mono, one family for both headings and body —
 // "one typeface, three weights" per the brand guidelines. Monospace
@@ -98,6 +101,23 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
         />
+        {/* afterInteractive (not beforeInteractive) — GA doesn't need to
+            block first paint, and next/script defers it off the critical
+            path automatically. Requires googletagmanager.com/google-
+            analytics.com in the CSP (next.config.ts) or gtag's requests
+            get silently blocked rather than just not-yet-loaded. */}
+        <Script
+          src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
+          strategy="afterInteractive"
+        />
+        <Script id="ga-init" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', '${GA_MEASUREMENT_ID}');
+          `}
+        </Script>
       </head>
       <body className="min-h-full flex flex-col bg-background text-foreground">
         {children}

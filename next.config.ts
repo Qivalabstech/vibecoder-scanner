@@ -23,16 +23,23 @@ const isDev = process.env.NODE_ENV !== "production";
 // doesn't silently break again the day PAYPAL_ENV flips to live.
 const PAYPAL_ORIGINS = "https://www.paypal.com https://www.sandbox.paypal.com";
 
+// gtag.js loads from googletagmanager.com and sends hits to
+// google-analytics.com (region-sharded subdomains like
+// region1.google-analytics.com, hence the wildcard) — without both in
+// the CSP, GA doesn't error visibly, it just silently drops every hit.
+const GA_SCRIPT_ORIGIN = "https://www.googletagmanager.com";
+const GA_CONNECT_ORIGINS = "https://www.googletagmanager.com https://*.google-analytics.com https://*.analytics.google.com";
+
 const CSP = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-inline' ${isDev ? "'unsafe-eval' " : ""}${PAYPAL_ORIGINS}`,
+  `script-src 'self' 'unsafe-inline' ${isDev ? "'unsafe-eval' " : ""}${PAYPAL_ORIGINS} ${GA_SCRIPT_ORIGIN}`,
   "style-src 'self' 'unsafe-inline'",
   // PayPal's button SDK renders its own logo/card-icon <img> tags into our
   // document at runtime (not in our source, so a grep for <img> missed
   // this) - found by testing after tightening this, not assumed.
   "img-src 'self' data: https://www.paypalobjects.com",
   "font-src 'self' data:",
-  `connect-src 'self' ${isDev ? "ws: " : ""}https://api-m.paypal.com https://api-m.sandbox.paypal.com ${PAYPAL_ORIGINS} https://*.supabase.co`,
+  `connect-src 'self' ${isDev ? "ws: " : ""}https://api-m.paypal.com https://api-m.sandbox.paypal.com ${PAYPAL_ORIGINS} https://*.supabase.co ${GA_CONNECT_ORIGINS}`,
   `frame-src ${PAYPAL_ORIGINS}`,
   "frame-ancestors 'self'",
   "base-uri 'self'",
