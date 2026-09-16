@@ -1,5 +1,50 @@
 # Memory
 
+## Current state (2026-09-17, Google Analytics + first-party traffic view in admin)
+
+Two asks: add the given gtag.js snippet, and show "where is traffic
+coming from" inside the admin panel. The second one can't literally
+pull live numbers *out of* Google Analytics without GA Data API
+credentials (an OAuth service account + property ID), which nothing
+in this session has — built a first-party substitute instead and said
+so plainly in the admin page's own copy, rather than presenting it as
+if it were GA data.
+
+- **`src/app/layout.tsx`** — the gtag snippet via `next/script`
+  (`strategy="afterInteractive"`) rather than raw `<script>` tags —
+  Next's documented pattern, keeps it off the critical rendering path.
+  Verified in a real production build (`next build` + `next start`):
+  `window.dataLayer` shows real `gtm.dom`/`gtm.load` events after the
+  external script loads, confirming it actually executes, not just
+  that the tag is present in HTML.
+- **`next.config.ts`** — CSP needed `googletagmanager.com` in
+  `script-src` and `googletagmanager.com` / `*.google-analytics.com` /
+  `*.analytics.google.com` in `connect-src`, or gtag's own requests get
+  silently dropped with no visible error (learned this exact lesson
+  earlier today with the CSP `unsafe-inline` investigation — checked
+  for it this time before assuming the tag alone was enough).
+- **`supabase/migrations/0012_page_views.sql`** (new, not yet applied —
+  same pending-migration situation as promo codes) — a `page_views`
+  table, service-role only.
+- **`src/lib/traffic.ts`** (new) — `logPageView()` filters to real
+  top-level page navigations only (excludes API routes, RSC
+  prefetch/transition fetches — detected via the `next-router-prefetch`
+  /`rsc` headers and `Accept: text/html`, the same signal Next's own
+  CSP-nonce docs use to tell these apart), logs path + referrer host
+  (only when it's a different host — same-site referers aren't a
+  traffic *source*) + UTM params, swallows its own errors so a logging
+  failure can never surface near the real response.
+- **`src/proxy.ts`** — calls `event.waitUntil(logPageView(request))`
+  at the top, fire-and-forget (Proxy defaults to the Node.js runtime in
+  Next 16, so a normal service-role Supabase call works fine here) —
+  doesn't block or slow down the auth-check logic already in this file.
+- **`(admin)/admin/traffic/page.tsx`** (new) + sidebar link — page
+  views, top referrers, top UTM sources, top pages, last-7-days-with-
+  traffic, all aggregated server-side from the last 30 days. Same
+  graceful-empty-state pattern as the promo-codes admin page for
+  before the migration is applied (query fails silently, renders "no
+  data" rather than crashing).
+
 ## Current state (2026-09-17, admin: delete a user)
 
 Requested so the admin can clear out a test account (e.g.

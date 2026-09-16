@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutGrid, DollarSign, Ticket, ArrowLeft } from "lucide-react";
+import { LayoutGrid, DollarSign, Ticket, Radar, ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SignOutButton } from "@/components/dashboard/sign-out-button";
 import { ThemeToggle } from "@/components/theme-toggle";
 
 const links = [
   { href: "/admin", label: "Overview", icon: LayoutGrid },
+  { href: "/admin/traffic", label: "Traffic", icon: Radar },
   { href: "/admin/pricing", label: "Pricing", icon: DollarSign },
   { href: "/admin/promo-codes", label: "Promo codes", icon: Ticket },
 ];

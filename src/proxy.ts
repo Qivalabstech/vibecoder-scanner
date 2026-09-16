@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
-import { NextResponse, type NextRequest } from "next/server";
+import { NextResponse, type NextRequest, type NextFetchEvent } from "next/server";
+import { logPageView } from "@/lib/traffic";
 
 const PROTECTED_PREFIXES = [
   "/dashboard",
@@ -18,7 +19,12 @@ const PROTECTED_PREFIXES = [
   // API instead.
 ];
 
-export async function proxy(request: NextRequest) {
+export async function proxy(request: NextRequest, event: NextFetchEvent) {
+  // Doesn't block the response — logPageView filters to real page
+  // navigations itself and swallows its own errors, so this can never
+  // slow down or fail a request regardless of DB state.
+  event.waitUntil(logPageView(request));
+
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(
