@@ -6,7 +6,7 @@ import { enqueueScan } from "@/lib/queue";
 import { isOverScanRateLimit } from "@/lib/rate-limit";
 import { isPubliclyRoutableHostname } from "@/lib/ssrf-guard";
 
-export async function POST(_request: Request, ctx: RouteContext<"/api/targets/[id]/scan">) {
+async function handlePost(_request: Request, ctx: RouteContext<"/api/targets/[id]/scan">) {
   const { id } = await ctx.params;
   const supabase = await createClient();
   const {
@@ -77,7 +77,15 @@ export async function POST(_request: Request, ctx: RouteContext<"/api/targets/[i
     .select()
     .single();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    await logAudit({
+      userId: user.id,
+      targetId: target.id,
+      action: "scan.trigger.insert_failed",
+      metadata: { error: error.message, code: error.code },
+    });
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
 
   const { data: profile } = await supabase.from("users").select("plan").eq("id", user.id).single();
 
@@ -106,4 +114,29 @@ export async function POST(_request: Request, ctx: RouteContext<"/api/targets/[i
   });
 
   return NextResponse.json({ scan }, { status: 201 });
+}
+
+// Wrapped so any unexpected exception (a bug, a bad env var, a DB call
+// throwing instead of returning {error}) still gets logged instead of
+// silently producing a 500 with nothing to diagnose it by — this route
+// had exactly that gap: a user reported scans not starting and the
+// audit log showed nothing at all for any of their attempts.
+export async function POST(request: Request, ctx: RouteContext<"/api/targets/[id]/scan">) {
+  try {
+    return await handlePost(request, ctx);
+  } catch (err) {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    await logAudit({
+      userId: user?.id ?? null,
+      action: "scan.trigger.unhandled_error",
+      metadata: { error: err instanceof Error ? err.message : String(err) },
+    });
+    return NextResponse.json(
+      { error: "internal_error", message: "Something went wrong starting the scan." },
+      { status: 500 }
+    );
+  }
 }
