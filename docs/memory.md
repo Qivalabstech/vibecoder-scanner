@@ -1,5 +1,47 @@
 # Memory
 
+## Current state (2026-09-17, admin: delete a user)
+
+Requested so the admin can clear out a test account (e.g.
+bareloop2026@gmail.com, used to reproduce the BorderBeam click bug)
+and let it retry cleanly instead of staying stuck on whatever the
+free-plan single-target limit already used up.
+
+- **`src/app/api/admin/users/[id]/route.ts`** (DELETE, new) — admin-only.
+  Deletes via `service.auth.admin.deleteUser(id)` (the Supabase Admin
+  API on `auth.users`), not a plain table delete — `public.users.id`
+  references `auth.users(id) on delete cascade`, and
+  targets/scans/findings/github_connections all cascade from
+  `public.users` in turn (migrations 0001/0002), so this one call
+  tears down everything the user owns and lets them sign up again from
+  scratch with the same email/GitHub account. Refuses to delete an
+  admin account (checked via `isSuperAdminEmail` on the target's
+  email, not just the caller's) since the allowlist is an env var —
+  nothing in-app could undo deleting the wrong one. Logs
+  `admin.user.deleted` with the deleted user's id/email in metadata
+  before they're gone (audit_log.user_id is `on delete set null`, so
+  the row survives but needs the email captured beforehand to still
+  mean anything).
+- **`src/components/admin/delete-user-button.tsx`** (new) — a trash
+  icon button per row in the admin users table, behind a real
+  confirmation Dialog (destructive, irreversible — not a bare
+  `confirm()` or an unconfirmed click, matching how this app treats
+  other destructive actions). Admin's own row (and any other
+  `SUPER_ADMIN_EMAILS` account) doesn't render the button at all,
+  redundant with but not a replacement for the route's own server-side
+  check.
+- **`(admin)/admin/page.tsx`** — added the button as a 5th column in
+  the existing users table.
+
+Known gap, not hit yet since migration 0011 isn't applied to
+production: `promo_codes.created_by` and `promo_redemptions.user_id`
+both reference `public.users(id)` with no `on delete` action
+specified (defaults to `NO ACTION`/restrict) — deleting a user who
+created or redeemed a promo code would fail on that FK once promo
+codes are live. Not fixed this pass; worth a migration tweak
+(`on delete set null` for `created_by`, `on delete cascade` for
+`promo_redemptions.user_id`) before that becomes a real scenario.
+
 ## Current state (2026-09-17, real bug: BorderBeam blocking all clicks on verified target cards)
 
 A user (bareloop2026@gmail.com, real new signup) reported "Scan now"

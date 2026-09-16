@@ -2,6 +2,8 @@ import { createServiceClient } from "@/lib/supabase/service";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { AnimatedNumber } from "@/components/ui/animated-number";
+import { DeleteUserButton } from "@/components/admin/delete-user-button";
+import { isSuperAdminEmail } from "@/lib/admin";
 
 export const dynamic = "force-dynamic";
 
@@ -89,6 +91,7 @@ export default async function AdminOverviewPage() {
                   <th className="px-4 py-2 font-medium">Plan</th>
                   <th className="px-4 py-2 font-medium">Targets</th>
                   <th className="px-4 py-2 font-medium">Joined</th>
+                  <th className="px-4 py-2 font-medium" />
                 </tr>
               </thead>
               <tbody>
@@ -106,11 +109,14 @@ export default async function AdminOverviewPage() {
                     <td className="px-4 py-2.5 text-muted-foreground">
                       {new Date(u.created_at).toLocaleDateString()}
                     </td>
+                    <td className="px-4 py-2.5 text-right">
+                      {!isSuperAdminEmail(u.email) && <DeleteUserButton userId={u.id} email={u.email} />}
+                    </td>
                   </tr>
                 ))}
                 {allUsers.length === 0 && (
                   <tr>
-                    <td colSpan={4} className="px-4 py-8 text-center text-muted-foreground">
+                    <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">
                       No users yet.
                     </td>
                   </tr>
