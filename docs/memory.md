@@ -1,5 +1,28 @@
 # Memory
 
+## Current state (2026-09-16, admin console mobile overflow fix)
+
+Full "check everything" sweep after the dashboard mobile nav work turned
+up a real, pre-existing bug: the admin console (`/admin`) scrolled
+horizontally on mobile — stat cards and the users table were cut off
+past the viewport edge, confirmed with `getBoundingClientRect()` on
+production (main content div measured 483px wide at a 375px viewport).
+
+Root cause: `src/app/(admin)/admin/layout.tsx`'s `<main
+className="flex-1 p-6 md:p-10">` sits in a row-direction flex container
+(`flex min-h-screen`). Flex items default to `min-width: auto`, so
+`main` wouldn't shrink below the intrinsic min-content width of its
+widest child (the audit-log rows / stat-card grid), pushing the whole
+page wider than the viewport. This is unrelated to and predates the
+dashboard mobile-nav work — the regular dashboard doesn't have this bug
+because its outer container was changed to `flex-col md:flex-row` for
+the mobile nav, so on mobile it's column-direction (width is the cross
+axis, which shrinks normally).
+
+**Fix**: added `min-w-0` to that `<main>` — one class, no structural
+change (`(admin)/admin/layout.tsx`). Asked before fixing since it's a
+bug outside the requested task's scope; user said yes.
+
 ## Current state (2026-09-16, dashboard mobile nav)
 
 Built the mobile nav for the regular user dashboard that was flagged and
