@@ -13,6 +13,17 @@ import { GithubButton } from "@/components/auth/github-button";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 
+// Same constraint as the server-side check in auth/callback/route.ts —
+// `next` is attacker-controllable via the URL, so it must stay a
+// same-origin relative path rather than being handed straight to the
+// router.
+function safeNextPath(value: string | null): string {
+  if (!value || !value.startsWith("/") || value.startsWith("//") || value.includes("://")) {
+    return "/dashboard";
+  }
+  return value;
+}
+
 export function LoginForm() {
   const router = useRouter();
   const params = useSearchParams();
@@ -30,7 +41,7 @@ export function LoginForm() {
       toast.error(error.message);
       return;
     }
-    router.replace(params.get("next") ?? "/dashboard");
+    router.replace(safeNextPath(params.get("next")));
     router.refresh();
   }
 

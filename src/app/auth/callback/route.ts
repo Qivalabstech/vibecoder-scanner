@@ -2,10 +2,21 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 
+// `next` comes from a query param on a link a user could receive from
+// anywhere (a phishing email included) — must be a same-origin relative
+// path, or this becomes an open redirect for a real, signed-in session
+// straight off a legitimate-looking hakscan.online/auth/callback URL.
+function safeNextPath(value: string | null): string {
+  if (!value || !value.startsWith("/") || value.startsWith("//") || value.includes("://")) {
+    return "/dashboard";
+  }
+  return value;
+}
+
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = request.nextUrl;
   const code = searchParams.get("code");
-  const next = searchParams.get("next") ?? "/dashboard";
+  const next = safeNextPath(searchParams.get("next"));
 
   if (!code) {
     return NextResponse.redirect(`${origin}/login`);
