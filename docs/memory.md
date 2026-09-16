@@ -1,5 +1,95 @@
 # Memory
 
+## Current state (2026-09-16, dashboard mobile nav)
+
+Built the mobile nav for the regular user dashboard that was flagged and
+left open in the previous session (the admin-only equivalent was
+deliberately left as-is; this one affects real paying customers).
+
+- **`src/components/ui/sheet.tsx`** — new, added via `npx shadcn add
+  sheet`. The installer wrote `import { cn } from "cn"`, which is wrong
+  for this project (every other UI component imports from
+  `@/lib/utils`) — fixed the import, then removed the now-unused `cn`
+  npm package the installer had also added to `package.json`. Tried
+  VengeanceUI first per CLAUDE.md, but its MCP server was down
+  (`CONNECTION_CLOSED`) — fell back to the project's existing shadcn
+  setup rather than block on it.
+- **`src/components/dashboard/mobile-nav.tsx`** — new. `md:hidden` header
+  with "Hakscan" wordmark + hamburger trigger, opens a left-side `Sheet`
+  with the same links/active-state logic as the desktop
+  `DashboardSidebar` (Overview/Targets/Billing/Admin console), plus
+  email, theme toggle, sign out. Closes on link click via `onClick={() =>
+  setOpen(false)}` — a `Sheet` doesn't auto-close on internal navigation.
+- **`src/app/(dashboard)/layout.tsx`** — renders `DashboardMobileNav`
+  alongside the existing `DashboardSidebar`; each is hidden by Tailwind
+  breakpoint (`md:hidden` / `hidden md:flex`) rather than one component
+  branching on viewport, so there's no hydration mismatch risk.
+
+**Verified without real login**: no stored dashboard credentials exist
+(confirmed again this session), so real `/dashboard` navigation isn't
+possible headlessly. Mounted both components together on a temporary
+route (`src/app/mobilenavpreview123/page.tsx`, deleted after) to check
+mobile (open/close the sheet, all links/icons/admin-console/sign-out
+render) and desktop (mobile header absent, sidebar shows, no double
+chrome) — then removed the scratch route and reran `tsc --noEmit` clean
+before pushing.
+
+## Current state (2026-09-16, SEO remediation from a pasted third-party audit)
+
+User pasted a full SEO Audit Report for hakscan.online (score 42/100, 6
+"critical" findings, 4 warnings, 3 opportunities). Fixed every critical
+finding plus the `llms.txt` opportunity; verified end-to-end (typecheck →
+`next build` → live production `curl`/DOM checks), not just "it compiles":
+
+- **`src/app/robots.ts`** — new, Next 16 file convention
+  (`MetadataRoute.Robots`). Allows `/`, disallows the four auth-gated
+  route groups (`/dashboard`, `/targets`, `/settings`, `/admin`), points
+  at the sitemap.
+- **`src/app/sitemap.ts`** — new (`MetadataRoute.Sitemap`). Confirmed via
+  `find src/app -name page.tsx` that `/`, `/login`, `/signup`,
+  `/legal/terms` are the *only* public routes before listing them — did
+  not guess the route list.
+- **`src/app/opengraph-image.tsx` + `twitter-image.tsx`** — new,
+  `next/og`'s `ImageResponse`. Root cause of why this needed real care:
+  `ImageResponse` (Satori) does not inherit page fonts — `fontFamily`
+  strings alone resolve to nothing without real TTF bytes passed via the
+  `fonts` array, so it reads the same `jbm-bold.ttf`/`jbm-regular.ttf`
+  already shipped for `next/font/local` in `layout.tsx`. `twitter-image.tsx`
+  re-exports it explicitly rather than relying on an og→twitter auto
+  fallback that was never confirmed to exist. Verified by navigating
+  directly to `/opengraph-image` and screenshotting the real rendered
+  PNG, on both `next dev` and live production.
+- **`src/app/layout.tsx`** — added `metadataBase`, extended
+  title/description (41→51 / ~118→~180 chars, still modest per the
+  audit's "too short" warnings, not keyword-stuffed), `alternates.canonical`,
+  full `openGraph`/`twitter` metadata blocks, and a `SoftwareApplication`
+  JSON-LD block in `<head>` with real `offers` pricing ($0 Free / $24 Pro,
+  matching the live PayPal plan — not fabricated numbers).
+- **`public/llms.txt`** — new, the audit's one "opportunity" item worth
+  doing. Real product facts only (plans, ownership-verification gate,
+  no third-party scan API — intentional, not a gap).
+
+**Deliberately left alone** (product/content-scope decisions, not SEO
+config): the "no img tags" and "single-page architecture" warnings — the
+site is genuinely a single marketing page by design; adding images or
+splitting pages to please an SEO checklist wasn't asked for and isn't a
+config fix.
+
+**Verification chain**: `next build` locally first (not just `next dev`,
+since `next/og` reads font files from disk at module scope and needed to
+be proven to work in a real production build) — all four new routes
+showed `○` (static) with zero errors. Pushed, waited for Vercel deploy
+(~30s propagation lag, confirmed via repeated `curl` rather than assumed),
+then re-verified on the live `www.hakscan.online` domain: `robots.txt`,
+`sitemap.xml` (real 4 URLs), `llms.txt`, `<title>`/canonical/OG tags,
+`twitter:*` tags, and the JSON-LD script — all confirmed present and
+correct via `curl` + grep and a direct browser screenshot of
+`/opengraph-image`. (Console-error check on the live homepage was
+inconclusive — the Browser pane tool itself blocked all `_next/static`
+JS/CSS/font requests session-wide in this run, confirmed unrelated to
+the site since `curl` returns real 200s for every blocked URL; not a
+production bug.)
+
 ## Current state (2026-09-14, dogfooding: scanned Hakscan with itself)
 
 Did a full end-to-end re-verification on the real `hakscan.online` domain
