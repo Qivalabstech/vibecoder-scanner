@@ -1,5 +1,83 @@
 # Memory
 
+## Current state (2026-09-16, promo codes feature + scan-report overflow fix)
+
+Two things from checking the scan flow and building promo codes:
+
+**Scan flow verified end-to-end on production**: triggered a real scan
+on `https://hakscan.online` from Targets → target detail → Scan now —
+watched the live step tracker (Resolving target → ZAP baseline →
+Triaging → Finalizing, auto-polling, no manual refresh), then the
+completed report with real triaged findings (High: CSP
+`script-src unsafe-inline`; Medium: COOP/COEP headers, cache; Low:
+cache-control) grouped by severity with a working PDF report link.
+
+**Found & fixed while checking it**: the scan report page
+(`(dashboard)/scans/[id]/page.tsx`) had the *exact same* horizontal
+overflow bug class already fixed once this session for the admin
+console — `(dashboard)/layout.tsx`'s `<main>` is a row-flex item on
+desktop/tablet (`flex-col md:flex-row`, so row-direction at `md:` and
+up) without `min-w-0`, so on a real (non-mobile) viewport it couldn't
+shrink below a long finding title's content width. Compounding it:
+`FindingCard`'s title `<span className="flex-1 truncate">` was also
+missing `min-w-0` — Tailwind's `truncate` alone doesn't stop a flex
+child from sizing to its un-wrapped content; the two together silently
+undo each other. Fixed both: `min-w-0` added to dashboard's `main`
+(matches the admin layout fix) and to the finding-title span.
+
+**Promo codes feature** (`/admin/promo-codes`), built after two rounds
+of scoping with the user: real percentage/fixed discount, single-use
+per code with an admin-set max redemption count. Key constraint driving
+the design: PayPal subscriptions have no coupon API (unlike Stripe) —
+the only way to actually change what's billed is to point the
+subscription at a different PayPal Plan, the same constraint the
+existing admin pricing page already documents for plain price changes.
+So a code doesn't compute a discount itself: the admin creates the real
+discounted plan in the PayPal dashboard first (existing manual
+workflow, unchanged), then a promo code just maps to that plan's id;
+discount_type/discount_value are a display label only, not a second
+source of truth for what's charged.
+
+- **`supabase/migrations/0011_promo_codes.sql`** — `promo_codes` +
+  `promo_redemptions` tables, both locked down to service_role only
+  (same revoke/grant pattern as every table since migration 0007).
+  Redemption is a `redeem_promo_code(code, user_id)` plpgsql function
+  using `for update` row-locking so two people racing for a code's last
+  slot can't both succeed (a plain read-then-write from the API route
+  would have that race). A paired `release_promo_redemption()` function
+  compensates when the reserved slot doesn't turn into a real
+  subscription (PayPal call fails, or billing isn't configured) — the
+  two aren't one transaction since PayPal is a separate system, so this
+  is a deliberate best-effort compensating action, not true atomicity
+  across both.
+  **Not yet applied to production** — no `SUPABASE_ACCESS_TOKEN`/DB
+  password available to this session (same credential gap noted
+  earlier), so `supabase db push` couldn't be run. Application code
+  deployed ahead of the migration is safe: the subscribe route only
+  touches the new tables/RPCs when a promo code is actually supplied,
+  so existing checkout is unaffected until the migration runs.
+- **`src/app/api/admin/promo-codes/route.ts`** (POST create) and
+  **`[id]/route.ts`** (PATCH active/inactive) — admin-only, same
+  re-check-auth-server-side-even-though-layout-redirects pattern as
+  `/api/admin/pricing`.
+- **`src/app/api/billing/promo/validate/route.ts`** — read-only check
+  (exists, active, not exhausted, not already used by this user) so the
+  checkout UI can show "20% off" before the user commits, without
+  burning a redemption slot just from checking.
+- **`src/app/api/billing/subscribe/route.ts`** — now accepts an
+  optional `promoCode`; when present, calls `redeem_promo_code()` first
+  and uses its returned plan id instead of `PAYPAL_PLAN_ID`, then calls
+  `release_promo_redemption()` in the catch/failure paths.
+- **`src/app/(admin)/admin/promo-codes/page.tsx`** + `promo-code-form.tsx`
+  + `promo-code-toggle.tsx` — list + create form + active/inactive
+  toggle, same layout conventions as the existing admin pricing page
+  (including its own warning callout about the PayPal-plan constraint).
+  Added to `admin-sidebar.tsx` nav.
+- **`src/components/dashboard/upgrade-button.tsx`** — added an optional
+  "Have a promo code?" input above the Upgrade button; validates via
+  the read-only endpoint, shows the applied discount, and passes the
+  code through to `/api/billing/subscribe` on checkout.
+
 ## Current state (2026-09-16, admin console mobile overflow fix)
 
 Full "check everything" sweep after the dashboard mobile nav work turned

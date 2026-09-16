@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutGrid, DollarSign, ArrowLeft } from "lucide-react";
+import { LayoutGrid, DollarSign, Ticket, ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SignOutButton } from "@/components/dashboard/sign-out-button";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -10,6 +10,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 const links = [
   { href: "/admin", label: "Overview", icon: LayoutGrid },
   { href: "/admin/pricing", label: "Pricing", icon: DollarSign },
+  { href: "/admin/promo-codes", label: "Promo codes", icon: Ticket },
 ];
 
 export function AdminSidebar({ email }: { email: string }) {
