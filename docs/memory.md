@@ -23,6 +23,18 @@ axis, which shrinks normally).
 change (`(admin)/admin/layout.tsx`). Asked before fixing since it's a
 bug outside the requested task's scope; user said yes.
 
+That fix stopped the page-wide scroll but surfaced a second-order
+effect: the users table (`(admin)/admin/page.tsx`) is 483px wide
+(4 columns, `table-layout: auto`) inside a `Card` with `overflow:
+hidden` that's now correctly constrained to ~327px — so the "Joined"
+column was being silently clipped instead of page-scrolled. Fixed by
+giving the table's own `CardContent` `overflow-x-auto` and the table
+`min-w-max`, so it scrolls within its own container per the
+"wide content gets its own overflow-x-auto" rule, rather than clipping
+or re-breaking the page-wide fix. Didn't re-prompt for this one — same
+bug investigation, same file area, same fix class the user had just
+approved.
+
 ## Current state (2026-09-16, dashboard mobile nav)
 
 Built the mobile nav for the regular user dashboard that was flagged and

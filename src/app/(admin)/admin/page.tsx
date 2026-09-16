@@ -81,8 +81,8 @@ export default async function AdminOverviewPage() {
           USERS ({allUsers.length})
         </h2>
         <Card>
-          <CardContent className="p-0">
-            <table className="w-full text-sm">
+          <CardContent className="overflow-x-auto p-0">
+            <table className="w-full min-w-max text-sm">
               <thead>
                 <tr className="border-b border-border text-left font-heading text-xs text-muted-foreground">
                   <th className="px-4 py-2 font-medium">Email</th>
