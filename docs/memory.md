@@ -1,5 +1,51 @@
 # Memory
 
+## Current state (2026-09-17, real bug: BorderBeam blocking all clicks on verified target cards)
+
+A user (bareloop2026@gmail.com, real new signup) reported "Scan now"
+not working on their verified repo target. Multi-round remote
+debugging (audit log showed zero trace across every attempt even after
+adding comprehensive error logging to the scan route; ruled out server,
+API logic, session/auth, browser type, JS hydration errors via a real
+console screenshot) eventually got a Network-tab screenshot showing
+**zero request was even attempted** when clicking "Scan now" — and,
+per the user, *no* button on the page responded to clicks, not just
+that one.
+
+Root cause: **`src/components/ui/border-beam.tsx`** — the decorative
+animated-border effect shown on verified target cards
+(`target-card.tsx`, `{target.verified && <BorderBeam ... />}`) is
+`position: absolute; inset: 0` with no `pointer-events-none`. Being
+absolutely positioned, it paints above the card's in-flow content
+(including the "Scan now" button, a sibling inside the same `relative`
+Card) and silently absorbs every click — no console error, since
+nothing crashes; the click just lands on an invisible decorative div
+instead of the button underneath it.
+
+This wasn't a new bug from this session's changes — it's been there
+since BorderBeam was added. It also explains something dismissed
+without follow-up earlier in *this same session*: the very first
+"Scan now" click during the "check the scan flow" request also did
+nothing when clicked from the Targets *list* page — I switched to
+testing from the target detail page instead (which has no BorderBeam)
+and never circled back to explain the list-page failure. Should have
+treated that as a real, worth-chasing signal instead of routing around
+it.
+
+**Fix**: added `pointer-events-none` to BorderBeam's className — one
+class, purely decorative in all five of its usages (auth shell,
+marketing hero, how-it-works, pricing teaser, target card), so it can
+never legitimately need to intercept clicks anywhere.
+
+**Process note for next time**: when a user reports something "not
+working" with no error visible, the fastest real signal is always a
+screenshot/recording of the actual DOM state — spent many rounds on
+server-side audit-log analysis and hypothesis-generation (SSRF guard,
+stale session, rate limiting, hydration crash, embedded-browser
+quirks) before getting a Network-tab screenshot that immediately
+showed "zero requests attempted," which was the one fact that actually
+narrowed it down. Ask for that earlier when audit logs show nothing.
+
 ## Current state (2026-09-16, security hardening pass — beyond what the passive scanner catches)
 
 User's framing: it shouldn't be the case that we scan other people's
