@@ -1,5 +1,42 @@
 # Memory
 
+## Current state (2026-09-17, promo codes: fully automated PayPal plan creation)
+
+User asked to make the promo codes feature actually live end-to-end,
+not the manual-paste-a-plan-ID version built earlier. Confirmed
+`PAYPAL_ENV=live` (real production PayPal, not sandbox) before
+touching anything, and confirmed the real product ID the standard Pro
+plan belongs to via a live `GET /v1/billing/plans/{PAYPAL_PLAN_ID}`
+call rather than guessing: `hakscanpro`.
+
+- **`src/lib/paypal.ts`** — added `getCurrentProPriceUsd()` (reads the
+  real current price off PayPal itself, not `pricing_config` which is
+  display-only and can drift — same reasoning the admin pricing page
+  already documents) and `createPaypalPlan(name, description,
+  priceUsd)` (real `POST /v1/billing/plans` under the `hakscanpro`
+  product, `status: "ACTIVE"` — the plan is live and subscribable the
+  instant this call succeeds).
+- **`/api/admin/promo-codes` POST** — no longer takes a `paypalPlanId`
+  from the admin. Computes the discounted price from PayPal's live
+  base price, calls `createPaypalPlan()`, then creates the `promo_codes`
+  row pointing at the real plan id it got back. If the DB insert then
+  fails (e.g. duplicate code), the PayPal plan it already created isn't
+  rolled back — said so plainly in the error message (deactivate it
+  manually in the PayPal dashboard) rather than silently leaving an
+  orphaned live plan unexplained. Percent discounts capped at <100.
+- **`promo-code-form.tsx`** — dropped the "PayPal plan ID" field
+  entirely; submit button reads "Creating the real PayPal plan…" while
+  the request is in flight, since that's genuinely what's happening
+  and takes a moment (a real PayPal API round-trip, not just a DB
+  write).
+- **`(admin)/admin/promo-codes/page.tsx`** — updated the warning
+  callout to describe the automated flow instead of the manual one.
+
+Not yet verified against a real promo code creation through the
+actual UI (migration 0011 needs to be applied first — same pending
+state as before). Next step once the migration lands: create one real
+code through `/admin/promo-codes` as the live end-to-end test.
+
 ## Current state (2026-09-17, Google Analytics + first-party traffic view in admin)
 
 Two asks: add the given gtag.js snippet, and show "where is traffic

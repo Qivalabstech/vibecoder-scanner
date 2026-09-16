@@ -24,15 +24,15 @@ export default async function AdminPromoCodesPage() {
 
       <div className="rounded-md border border-severity-medium/30 bg-severity-medium/10 p-4 text-sm">
         <p className="font-heading text-xs font-medium tracking-wide text-severity-medium">
-          A CODE POINTS AT A REAL PAYPAL PLAN, IT DOESN&apos;T COMPUTE A DISCOUNT
+          CREATING A CODE CREATES A REAL, LIVE PAYPAL PLAN
         </p>
         <p className="mt-2 text-muted-foreground">
           PayPal subscriptions have no coupon API — a discount only works by putting the subscriber on a
           different PayPal Plan already priced at the discounted amount, same as changing the base Pro
-          price (see the Pricing tab). Before creating a code here, create that discounted plan in the
-          PayPal developer dashboard first, then paste its plan ID below. The percent/fixed value you enter
-          is a label shown to the redeemer and in this table — it isn&apos;t a second source of truth for
-          what&apos;s actually charged.
+          price (see the Pricing tab). Creating a code here calls PayPal&apos;s live billing API and
+          creates that plan automatically, priced off PayPal&apos;s own current Pro price — no manual
+          dashboard step. That plan is immediately active in your real PayPal account the moment this
+          succeeds, whether or not you go on to actually use the code.
         </p>
       </div>
 

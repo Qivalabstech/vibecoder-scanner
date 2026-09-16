@@ -73,6 +73,73 @@ export async function createPaypalSubscription(planId: string, userId: string): 
   return res.json();
 }
 
+// Same product every Pro-tier plan (including discount plans) belongs
+// to — confirmed live via GET /v1/billing/plans/{PAYPAL_PLAN_ID}
+// against this account, not guessed. Not a secret, just a stable
+// catalog identifier, so it's fine as a constant rather than another
+// env var to keep in sync.
+const PRO_PRODUCT_ID = "hakscanpro";
+
+export interface PaypalPlan {
+  id: string;
+  status: string;
+}
+
+/** The real, currently-billed Pro price — read from PayPal itself
+ * (not pricing_config, which is display-only and can drift from what
+ * PayPal actually charges, per the admin pricing page's own warning)
+ * so percent-off promo codes are computed from the real number. */
+export async function getCurrentProPriceUsd(): Promise<number> {
+  const res = await paypalFetch(`/v1/billing/plans/${process.env.PAYPAL_PLAN_ID}`);
+  if (!res.ok) {
+    throw new Error(`PayPal plan lookup failed: ${res.status} ${await res.text()}`);
+  }
+  const json = (await res.json()) as {
+    billing_cycles: { pricing_scheme: { fixed_price: { value: string } } }[];
+  };
+  return Number(json.billing_cycles[0].pricing_scheme.fixed_price.value);
+}
+
+/** Creates a real, live PayPal billing plan at the given monthly price,
+ * under the same product as the standard Pro plan. This is a real
+ * write against production PayPal — the plan is immediately active and
+ * subscribable the moment a promo code redemption points a
+ * subscription at it. */
+export async function createPaypalPlan(name: string, description: string, priceUsd: number): Promise<PaypalPlan> {
+  const res = await paypalFetch("/v1/billing/plans", {
+    method: "POST",
+    body: JSON.stringify({
+      product_id: PRO_PRODUCT_ID,
+      name,
+      description,
+      status: "ACTIVE",
+      billing_cycles: [
+        {
+          frequency: { interval_unit: "MONTH", interval_count: 1 },
+          tenure_type: "REGULAR",
+          sequence: 1,
+          total_cycles: 0,
+          pricing_scheme: {
+            fixed_price: { value: priceUsd.toFixed(2), currency_code: "USD" },
+          },
+        },
+      ],
+      payment_preferences: {
+        service_type: "PREPAID",
+        auto_bill_outstanding: true,
+        setup_fee_failure_action: "CONTINUE",
+        payment_failure_threshold: 1,
+      },
+    }),
+  });
+
+  if (!res.ok) {
+    throw new Error(`PayPal plan create failed: ${res.status} ${await res.text()}`);
+  }
+
+  return res.json();
+}
+
 export async function cancelPaypalSubscription(subscriptionId: string, reason: string): Promise<void> {
   const res = await paypalFetch(`/v1/billing/subscriptions/${subscriptionId}/cancel`, {
     method: "POST",

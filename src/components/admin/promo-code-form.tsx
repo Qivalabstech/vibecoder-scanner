@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,7 +15,6 @@ export function PromoCodeForm() {
   const [code, setCode] = useState("");
   const [discountType, setDiscountType] = useState<"percent" | "fixed">("percent");
   const [discountValue, setDiscountValue] = useState("");
-  const [paypalPlanId, setPaypalPlanId] = useState("");
   const [maxRedemptions, setMaxRedemptions] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -31,12 +31,8 @@ export function PromoCodeForm() {
       toast.error("Enter a discount value greater than 0.");
       return;
     }
-    if (discountType === "percent" && discountValueNum > 100) {
-      toast.error("A percent discount can't be more than 100.");
-      return;
-    }
-    if (!paypalPlanId.trim()) {
-      toast.error("Paste the PayPal plan ID for the discounted price.");
+    if (discountType === "percent" && discountValueNum >= 100) {
+      toast.error("A percent discount has to be less than 100.");
       return;
     }
     if (!Number.isInteger(maxRedemptionsNum) || maxRedemptionsNum <= 0) {
@@ -52,7 +48,6 @@ export function PromoCodeForm() {
         code: code.trim(),
         discountType,
         discountValue: discountValueNum,
-        paypalPlanId: paypalPlanId.trim(),
         maxRedemptions: maxRedemptionsNum,
       }),
     });
@@ -64,10 +59,9 @@ export function PromoCodeForm() {
       return;
     }
 
-    toast.success("Promo code created.");
+    toast.success("Promo code created — the PayPal plan is live.");
     setCode("");
     setDiscountValue("");
-    setPaypalPlanId("");
     setMaxRedemptions("");
     router.refresh();
   }
@@ -116,21 +110,6 @@ export function PromoCodeForm() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="promo-plan-id">PayPal plan ID for this discount</Label>
-            <Input
-              id="promo-plan-id"
-              placeholder="P-XXXXXXXXXXXXXXXXXXXXX"
-              value={paypalPlanId}
-              onChange={(e) => setPaypalPlanId(e.target.value)}
-              className="font-mono"
-            />
-            <p className="text-xs text-muted-foreground">
-              This has to be a real PayPal Plan you created at the discounted price — a code doesn&apos;t
-              compute a discount itself, it points a subscription at this plan instead of the default one.
-            </p>
-          </div>
-
-          <div className="space-y-2">
             <Label htmlFor="promo-max-redemptions">Max redemptions</Label>
             <Input
               id="promo-max-redemptions"
@@ -143,7 +122,8 @@ export function PromoCodeForm() {
           </div>
 
           <Button type="submit" disabled={loading}>
-            {loading ? "Creating…" : "Create promo code"}
+            {loading && <Loader2 className="size-4 animate-spin" />}
+            {loading ? "Creating the real PayPal plan…" : "Create promo code"}
           </Button>
         </form>
       </CardContent>
