@@ -42,9 +42,14 @@ export function ScanProgressAnimation({
   startedAt: string | null;
 }) {
   const stages = targetType === "site" ? SITE_STAGES : REPO_STAGES;
-  const [elapsed, setElapsed] = useState(() => secondsSince(startedAt));
+  // Start at 0 on both server and client render so hydration matches —
+  // Date.now() differs between the server render and the client's, which
+  // caused a hydration mismatch (React error #418) here. The real elapsed
+  // time is set immediately after mount instead.
+  const [elapsed, setElapsed] = useState(0);
 
   useEffect(() => {
+    setElapsed(secondsSince(startedAt));
     const id = setInterval(() => setElapsed(secondsSince(startedAt)), 1000);
     return () => clearInterval(id);
   }, [startedAt]);
