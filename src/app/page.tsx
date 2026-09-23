@@ -2,6 +2,7 @@ import Link from "next/link";
 import Script from "next/script";
 import { Newsreader } from "next/font/google";
 import { createPublicClient } from "@/lib/supabase/public";
+import { LandingMobileNav } from "@/components/landing/mobile-nav";
 import styles from "./landing.module.css";
 
 // This page's own serif body face — the rest of the app only loads
@@ -76,9 +77,10 @@ export default async function Home() {
             <a href="#limits">What we don&apos;t do</a>
             <a href="#pricing">Pricing</a>
           </div>
-          <Link className={`${styles.btn} ${styles.btnSolid}`} href="/signup">
+          <Link className={`${styles.btn} ${styles.btnSolid} ${styles.navCta}`} href="/signup">
             Scan my project
           </Link>
+          <LandingMobileNav />
         </nav>
       </header>
 

@@ -179,6 +179,75 @@
   .navlinks {
     display: none;
   }
+  /* redundant with the mobile panel's own CTA once the hamburger
+     appears, and cramped for space alongside brand + toggle */
+  .navCta {
+    display: none;
+  }
+}
+
+/* mobile nav — the original design just hid .navlinks below 800px
+   with nothing in its place; this adds a hamburger + panel using the
+   same tokens/typography as the rest of the page. */
+.navToggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 7px;
+  border: 1px solid var(--rule);
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+  flex: none;
+}
+.navToggle:hover {
+  border-color: var(--teal);
+  color: var(--teal);
+}
+@media (max-width: 800px) {
+  .navToggle {
+    display: inline-flex;
+  }
+}
+.mobilePanel {
+  /* .header is position:sticky, the nearest positioned ancestor — this
+     lets the panel live inside the flex .nav row in the DOM without
+     being squeezed into that flex layout. */
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  border-bottom: 1px solid var(--rule);
+  background: var(--paper);
+  max-height: calc(100vh - 100%);
+  overflow-y: auto;
+}
+.mobilePanel nav {
+  display: flex;
+  flex-direction: column;
+  padding: 8px 28px 20px;
+  max-width: 1120px;
+  margin: 0 auto;
+}
+.mobileLink {
+  font-family: var(--font-jbm), monospace;
+  font-size: 16px;
+  color: var(--ink-2);
+  text-decoration: none;
+  padding: 13px 0;
+  border-bottom: 1px solid var(--rule);
+}
+.mobileLink:last-child {
+  border-bottom: none;
+}
+.mobileLink:hover {
+  color: var(--ink);
+}
+.mobileCta {
+  margin-top: 16px;
+  text-align: center;
 }
 
 /* ---------- hero ---------- */

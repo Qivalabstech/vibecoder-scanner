@@ -1,5 +1,35 @@
 # Memory
 
+## Current state (2026-09-24, landing page mobile nav)
+
+Added the mobile nav the new landing page's own source file never had
+(it just hid `.navlinks` below 800px with nothing in its place — noted
+and left as-designed when the page first shipped, per the user's
+"preserve exactly as written" instruction at the time; now explicitly
+asked for).
+
+- **`src/components/landing/mobile-nav.tsx`** (new, client component)
+  — hamburger toggle + slide-down panel with the same four nav links
+  plus a full-width CTA, imports `landing.module.css` directly (CSS
+  Modules are fine to import from multiple files — Next dedupes at
+  build time) so it shares the page's exact tokens/typography rather
+  than inventing a second design language.
+- **`landing.module.css`** — panel is `position: absolute` off
+  `.header` (already `position: sticky`, the nearest positioned
+  ancestor) specifically so the toggle button and panel div can live
+  inside the existing flex `.nav` row in the DOM without being
+  squeezed into that flex layout.
+- Found by testing, not assumed: with the hamburger added, the header
+  now had three items at mobile width (brand, the existing "Scan my
+  project" CTA, toggle) and the CTA text wrapped awkwardly to two
+  lines. Since the panel already has its own full-width CTA, hid the
+  header's standalone one below 800px (`.navCta` class) rather than
+  cramming three things into one row — confirmed clean after rebuilding
+  and re-testing at 375px.
+- Verified: link tap scrolls to the right section and auto-closes the
+  panel; desktop (1280px) shows the original nav links + CTA with no
+  hamburger, completely unaffected.
+
 ## Current state (2026-09-24, full landing page replacement)
 
 User supplied a complete new landing page as a standalone HTML/CSS
