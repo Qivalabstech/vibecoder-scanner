@@ -1,5 +1,45 @@
 # Memory
 
+## Current state (2026-09-24, dogfooding round 4: post-landing-page scan)
+
+Rescanned hakscan.online after the landing page replacement + mobile
+nav. 8 findings: High CSP `script-src unsafe-inline` (unchanged,
+already-documented tradeoff from earlier this session — Next.js's own
+hydration scripts need it); Medium COOP/COEP (unchanged, deliberate —
+PayPal checkout compatibility); Low caching findings (unchanged, false
+positives — the homepage's `public` cache-control is *correct* for a
+page with zero sensitive content, confirmed earlier this session). Two
+new High findings from the landing page's own additions, worth real
+investigation:
+
+**Fixed — Cross-Domain Misconfiguration**: evidence was
+`Access-Control-Allow-Origin: *` on the homepage. Verified via direct
+`curl` (not assumed) that this is a **Vercel platform default**
+injected on statically-prerendered responses specifically — present on
+`/` and `/login` (both `x-nextjs-prerender: 1`), completely absent on
+real dynamic routes (`/dashboard`, `/api/billing/webhook`) and nowhere
+in this project's own `next.config.ts`. Nothing on these pages needs
+cross-origin fetch access. Added an explicit
+`Access-Control-Allow-Origin: https://hakscan.online` in
+`next.config.ts`'s `headers()` to replace the wildcard — needs
+verifying after deploy that an explicit origin header actually
+overrides Vercel's injected default rather than being additive with
+it (if the platform ADDS `*` regardless, the origin's own explicit
+header should still take precedence per HTTP header merge semantics,
+but confirm rather than assume).
+
+**Investigated, not fixed — Sub Resource Integrity Attribute Missing**:
+evidence was the `<link rel="preload">` hint `next/script` auto-emits
+for the GA tag (`strategy="afterInteractive"`). This is the same class
+of finding as the CSP one: Google's own documented position is that
+SRI isn't viable for `gtag.js` specifically, because the file is
+updated without notice — a fixed integrity hash would silently break
+Analytics the next time Google ships a change. Considered avoiding the
+preload hint (`strategy="lazyOnload"`) to dodge the specific tag
+pattern ZAP checks, but that doesn't make the script more secure, only
+delays real Analytics initialization to appease the scanner — not a
+real fix, so left alone and documented here instead of forcing one.
+
 ## Current state (2026-09-24, landing page mobile nav)
 
 Added the mobile nav the new landing page's own source file never had

@@ -78,6 +78,16 @@ const nextConfig: NextConfig = {
           { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
           { key: "Cross-Origin-Resource-Policy", value: "same-origin" },
           { key: "Cross-Origin-Opener-Policy", value: "same-origin-allow-popups" },
+          // Found scanning ourselves: Vercel's CDN injects
+          // Access-Control-Allow-Origin: * on statically-prerendered
+          // pages by default (confirmed via curl — absent on real
+          // dynamic routes, so it's a platform default, not anything
+          // in this file). Nothing here needs cross-origin fetch
+          // access; pin it to our own origin explicitly rather than
+          // leaving the wildcard, and verify after deploy that this
+          // actually overrides the platform default rather than
+          // being additive with it.
+          { key: "Access-Control-Allow-Origin", value: "https://hakscan.online" },
         ],
       },
     ];
