@@ -1,6 +1,45 @@
 # Memory
 
-## Current state (2026-09-24, dogfooding round 4: post-landing-page scan)
+## Current state (2026-09-24, full-site sweep + hydration fix + repo self-scan)
+
+Ran a comprehensive "check everything" pass per user request: console
+errors + horizontal overflow on `/`, `/login`, `/signup`, `/dashboard`,
+`/targets`, `/settings/billing`, `/admin`, `/admin/traffic`,
+`/admin/pricing`, `/admin/promo-codes` — all clean. Explicit mobile
+(375px) and tablet (768px) viewport checks on the new landing page,
+including opening/closing the mobile nav panel — clean, no overflow,
+CTA text doesn't wrap.
+
+**Fixed — real bug found via self-scan, not a scanner finding**: the
+scan-in-progress page (`/scans/[id]`) threw React error #418
+(hydration mismatch) on every load while a scan was running. Root
+cause: `ScanProgressAnimation` (`src/components/dashboard/scan-progress-animation.tsx`)
+called `useState(() => secondsSince(startedAt))` — computing elapsed
+time from `Date.now()` inside the initializer runs once during SSR
+(server's clock) and again during client hydration (client's clock,
+after network delay), so the two renders' output never matched. Fixed
+by starting `elapsed` at a fixed `0` on both server and client, then
+setting the real value in `useEffect` immediately after mount (existing
+pattern already used for the following `setInterval`). Verified fixed
+live: triggered a fresh scan post-deploy, zero console errors through
+the full running→done transition.
+
+**Investigated, not fixed — two Semgrep findings on the worker's own
+scanner code** (found scanning `Qivalabstech/vibecoder-scanner` itself):
+`path-join-resolve-traversal` at `worker/scanners/repo-scan.ts:102`
+(`path.join(repoDir, reportName)`) and `unsafe-formatstring` at
+`worker/index.ts:238` (`console.error(..., err.message)`). Both are
+false positives, confirmed by tracing the actual data flow rather than
+trusting the rule name: `repoDir` comes from `mkdtemp()` (system-
+generated) and `reportName` is a hardcoded string constant — neither is
+attacker-controlled, so there's no traversal to sanitize against. The
+`console.error` call passes `err.message` as a separate argument, not
+interpolated into the format string, so it can't be used for format-
+string injection. No code change made — these are Semgrep pattern-
+matching on `path.join`/`console.error` shape without dataflow
+awareness, not real vulnerabilities.
+
+## Prior state (2026-09-24, dogfooding round 4: post-landing-page scan)
 
 Rescanned hakscan.online after the landing page replacement + mobile
 nav. 8 findings: High CSP `script-src unsafe-inline` (unchanged,
