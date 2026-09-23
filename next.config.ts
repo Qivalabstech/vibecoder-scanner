@@ -30,16 +30,23 @@ const PAYPAL_ORIGINS = "https://www.paypal.com https://www.sandbox.paypal.com";
 const GA_SCRIPT_ORIGIN = "https://www.googletagmanager.com";
 const GA_CONNECT_ORIGINS = "https://www.googletagmanager.com https://*.google-analytics.com https://*.analytics.google.com";
 
+// Meta Pixel (landing page): fbevents.js is external script-src; the
+// <noscript> fallback loads an actual <img> pixel from facebook.com, so
+// that needs img-src too. The inline fbq(...) init script itself is
+// already covered by script-src's existing 'unsafe-inline'.
+const META_PIXEL_SCRIPT_ORIGIN = "https://connect.facebook.net";
+const META_PIXEL_IMG_ORIGIN = "https://www.facebook.com";
+
 const CSP = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-inline' ${isDev ? "'unsafe-eval' " : ""}${PAYPAL_ORIGINS} ${GA_SCRIPT_ORIGIN}`,
+  `script-src 'self' 'unsafe-inline' ${isDev ? "'unsafe-eval' " : ""}${PAYPAL_ORIGINS} ${GA_SCRIPT_ORIGIN} ${META_PIXEL_SCRIPT_ORIGIN}`,
   "style-src 'self' 'unsafe-inline'",
   // PayPal's button SDK renders its own logo/card-icon <img> tags into our
   // document at runtime (not in our source, so a grep for <img> missed
   // this) - found by testing after tightening this, not assumed.
-  "img-src 'self' data: https://www.paypalobjects.com",
+  `img-src 'self' data: https://www.paypalobjects.com ${META_PIXEL_IMG_ORIGIN}`,
   "font-src 'self' data:",
-  `connect-src 'self' ${isDev ? "ws: " : ""}https://api-m.paypal.com https://api-m.sandbox.paypal.com ${PAYPAL_ORIGINS} https://*.supabase.co ${GA_CONNECT_ORIGINS}`,
+  `connect-src 'self' ${isDev ? "ws: " : ""}https://api-m.paypal.com https://api-m.sandbox.paypal.com ${PAYPAL_ORIGINS} https://*.supabase.co ${GA_CONNECT_ORIGINS} ${META_PIXEL_IMG_ORIGIN}`,
   `frame-src ${PAYPAL_ORIGINS}`,
   "frame-ancestors 'self'",
   "base-uri 'self'",

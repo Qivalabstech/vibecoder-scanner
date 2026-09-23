@@ -1,5 +1,72 @@
 # Memory
 
+## Current state (2026-09-24, full landing page replacement)
+
+User supplied a complete new landing page as a standalone HTML/CSS
+file and asked for it converted into the site's real homepage, with
+copy/structure/Meta Pixel preserved exactly and the `#start` CTAs
+wired to real signup. Confirmed first (the file's design — light
+paper background, serif Newsreader body text, teal accent — is a
+different visual system than the rest of the app's dark/monospace
+"OPERATOR CONSOLE" theme) that the user wanted this page's *own*
+header/footer kept as designed, not the existing dark
+`MarketingNav`/`MarketingFooter` bolted on — this is a full landing
+redesign, not a content swap onto the old chrome.
+
+- **`src/app/landing.module.css`** (new) — the file's CSS, scoped
+  under a `.landing` wrapper class rather than `:root`/`body`/`html`.
+  Next's own CSS docs explicitly warn that "global styles ... currently
+  does not remove stylesheets as you navigate between routes," so the
+  original file's bare-element reset (`*`, `body`, `a`, `img`,
+  `:focus-visible`) would have bled into every other route
+  indefinitely once loaded. `html{scroll-padding-top}` (offsetting
+  anchor jumps for the sticky header) can't be scoped to one route
+  either — replaced with `scroll-margin-top` on each anchor-target
+  section instead, same visual effect, fully scopable.
+- **`src/app/page.tsx`** — replaces the previous homepage entirely.
+  Loads `Newsreader` via `next/font/google` (this page only — the rest
+  of the app only ever loaded JetBrains Mono); reuses the existing
+  `--font-jbm` variable from `layout.tsx` rather than reloading it.
+  Meta Pixel via `next/script` (`afterInteractive`, same pattern as the
+  GA tag) with the `<noscript>` fallback preserved. Copy preserved
+  verbatim. Kept the existing convention of fetching the real
+  `pro_price_usd` from `pricing_config` rather than hardcoding "$24" —
+  matches what the previous homepage already did.
+- **CTA routing**: every `href="#start"` occurrence *and* the closing
+  section's own `href="#"` button (clearly the same "go sign up" intent,
+  even though its href text didn't literally match `#start`) now point
+  to `/signup`. In-page nav anchors (`#how`, `#scans`, `#limits`,
+  `#pricing`) left untouched. Footer's placeholder `href="#"` links:
+  wired "Terms" to the real, existing `/legal/terms` (a dead link there
+  when a real page exists would've been an obvious, avoidable defect);
+  left "Privacy" as `href="#"` since no real privacy page exists in
+  this project — didn't invent one.
+- **`next.config.ts`** — added `connect.facebook.net` to `script-src`
+  and `www.facebook.com` to both `img-src` (the noscript pixel) and
+  `connect-src` (the JS beacon to `/tr`) — same "silently dropped, not
+  visibly erroring" CSP lesson from the GA tag earlier. The Pixel's own
+  inline init script needed no CSP change since `script-src` already
+  carries `'unsafe-inline'` (kept from the earlier hydration
+  investigation).
+
+**Verified before pushing** (given how many times a CSP miss has bitten
+this project silently): real production build (`next build` +
+`next start`), confirmed in a real browser — zero console errors,
+`window.fbq` is a real function with an empty queue after init+track
+(meaning the pixel script actually processed the calls, not just
+loaded), both Facebook scripts present with no CSP block, all three
+CTAs resolve to `/signup` and one was click-tested through to the real
+signup page, Terms resolves to `/legal/terms`, dark mode auto-detected
+correctly via `prefers-color-scheme`, and `next build`'s route table
+still shows `○` (static) for `/` — the `createPublicClient()` fix from
+earlier this session still holds since the new page fetches pricing
+the same cookie-free way the old one did.
+
+**Left alone, not deleted**: `src/components/marketing/{nav,hero,
+how-it-works,pricing-teaser,footer}.tsx` are now unused (confirmed via
+grep — nothing imports them anymore) but left in place rather than
+deleted, since removal wasn't asked for.
+
 ## Current state (2026-09-17, promo codes: fully automated PayPal plan creation)
 
 User asked to make the promo codes feature actually live end-to-end,
