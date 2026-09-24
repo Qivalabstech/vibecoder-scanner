@@ -17,7 +17,7 @@ const newsreader = Newsreader({
   display: "swap",
 });
 
-const META_PIXEL_ID = "2150486143013973";
+const META_PIXEL_ID = "1359487770578149";
 
 export default async function Home() {
   const supabase = createPublicClient();
