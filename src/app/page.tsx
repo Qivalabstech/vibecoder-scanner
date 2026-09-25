@@ -333,6 +333,30 @@ if (!safe.startsWith(UPLOAD_DIR)) throw new Error('bad path');`}
       </main>
 
       <footer className={styles.footer}>
+        <div className={`${styles.wrap} ${styles.badges}`}>
+          <a href="https://www.betterlaunch.co/product/hakscan" target="_blank" rel="noopener noreferrer">
+            {/* eslint-disable-next-line @next/next/no-img-element -- external launch-platform badge, not app content */}
+            <img
+              src="https://www.betterlaunch.co/badge-launching-light.svg"
+              alt="Launching on Better Launch"
+              width={200}
+              height={56}
+            />
+          </a>
+          <a
+            href="https://www.producthunt.com/products/hakscan-ai?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-hakscan-ai"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element -- external launch-platform badge, not app content */}
+            <img
+              src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1250664&theme=dark&t=1790337942006"
+              alt="Hakscan Ai - Your AI wrote the code. We check it. | Product Hunt"
+              width={250}
+              height={54}
+            />
+          </a>
+        </div>
         <div className={`${styles.wrap} ${styles.foot}`}>
           <span>Hakscan — QivaLabs LLP, Udaipur</span>
           <span>

@@ -37,6 +37,11 @@ const GA_CONNECT_ORIGINS = "https://www.googletagmanager.com https://*.google-an
 const META_PIXEL_SCRIPT_ORIGIN = "https://connect.facebook.net";
 const META_PIXEL_IMG_ORIGIN = "https://www.facebook.com";
 
+// Launch-platform badges in the landing page footer — both serve their
+// badge as a remote <img>, so each needs its own img-src origin or the
+// badge silently fails to render (no console error, just a broken image).
+const LAUNCH_BADGE_IMG_ORIGINS = "https://www.betterlaunch.co https://api.producthunt.com";
+
 const CSP = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline' ${isDev ? "'unsafe-eval' " : ""}${PAYPAL_ORIGINS} ${GA_SCRIPT_ORIGIN} ${META_PIXEL_SCRIPT_ORIGIN}`,
@@ -44,7 +49,7 @@ const CSP = [
   // PayPal's button SDK renders its own logo/card-icon <img> tags into our
   // document at runtime (not in our source, so a grep for <img> missed
   // this) - found by testing after tightening this, not assumed.
-  `img-src 'self' data: https://www.paypalobjects.com ${META_PIXEL_IMG_ORIGIN}`,
+  `img-src 'self' data: https://www.paypalobjects.com ${META_PIXEL_IMG_ORIGIN} ${LAUNCH_BADGE_IMG_ORIGINS}`,
   "font-src 'self' data:",
   `connect-src 'self' ${isDev ? "ws: " : ""}https://api-m.paypal.com https://api-m.sandbox.paypal.com ${PAYPAL_ORIGINS} https://*.supabase.co ${GA_CONNECT_ORIGINS} ${META_PIXEL_IMG_ORIGIN}`,
   `frame-src ${PAYPAL_ORIGINS}`,
