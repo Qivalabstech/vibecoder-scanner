@@ -18,10 +18,16 @@ const jbm = localFont({
   ],
 });
 
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://hakscan.online";
+// www is the host that's actually live — hakscan.online (no www) 308-
+// redirects to it. Every canonical/sitemap/robots URL must point at the
+// live host, or Google gets mixed signals about which one is real (found
+// via SEO audit — this was previously pointing at the redirecting host).
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://www.hakscan.online";
 const TITLE = "Hakscan: Find Security Flaws in Your AI-Built App";
+// Kept to ~150 chars so Google doesn't truncate it in search results
+// (the previous version ran to ~180 chars).
 const DESCRIPTION =
-  "Scan your GitHub repo or live site for vulnerabilities and get an AI-explained, prioritized report with the exact fix — free for your first target, no security background required.";
+  "Scan your GitHub repo or live site for security flaws. Get a plain-English report with the exact fix. First project free, no security background needed.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),
@@ -56,8 +62,10 @@ const structuredData = {
   name: "Hakscan",
   description: DESCRIPTION,
   url: BASE_URL,
+  image: `${BASE_URL}/opengraph-image`,
   applicationCategory: "SecurityApplication",
   operatingSystem: "Web",
+  publisher: { "@type": "Organization", name: "QivaLabs LLP" },
   offers: [
     { "@type": "Offer", name: "Free", price: "0", priceCurrency: "USD" },
     {
@@ -73,6 +81,21 @@ const structuredData = {
       },
     },
   ],
+  // aggregateRating deliberately omitted — no real reviews exist yet, and
+  // schema.org rating markup without genuine reviews backing it is exactly
+  // the kind of thing that gets a manual action from Google.
+};
+
+// Organization schema — sameAs links the brand to profiles Google can
+// already crawl (Product Hunt, Better Launch), which helps establish the
+// brand entity for a domain this new.
+const organizationData = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: "Hakscan",
+  url: BASE_URL,
+  logo: `${BASE_URL}/icon.png`,
+  sameAs: ["https://www.producthunt.com/products/hakscan-ai", "https://www.betterlaunch.co/product/hakscan"],
 };
 
 // Runs before paint: defaults to dark unless the visitor explicitly chose light.
@@ -100,6 +123,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationData) }}
         />
         {/* afterInteractive (not beforeInteractive) — GA doesn't need to
             block first paint, and next/script defers it off the critical

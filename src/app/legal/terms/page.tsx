@@ -1,3 +1,11 @@
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Terms of Service, Hakscan",
+  description: "The terms governing use of Hakscan's security scanning service.",
+  alternates: { canonical: "/legal/terms" },
+};
+
 export default function TermsPage() {
   return (
     <div className="mx-auto max-w-2xl px-6 py-20 prose prose-invert">

@@ -92,7 +92,9 @@ const nextConfig: NextConfig = {
           // leaving the wildcard, and verify after deploy that this
           // actually overrides the platform default rather than
           // being additive with it.
-          { key: "Access-Control-Allow-Origin", value: "https://hakscan.online" },
+          // www is the live host (hakscan.online redirects to it) — see
+          // src/app/layout.tsx for the same non-www→www fix elsewhere.
+          { key: "Access-Control-Allow-Origin", value: "https://www.hakscan.online" },
         ],
       },
     ];

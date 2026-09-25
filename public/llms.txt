@@ -14,6 +14,8 @@ Hakscan exists for "vibecoders" — founders who ship apps built with AI coding 
 ## Policies
 
 - Terms of Service: /legal/terms
+- Privacy Policy: /legal/privacy
+- Security contact (RFC 9116): /.well-known/security.txt
 
 ## For AI agents and crawlers
 

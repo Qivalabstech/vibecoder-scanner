@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://hakscan.online";
+// www is the live host — see sitemap.ts for why this can't be the bare domain.
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://www.hakscan.online";
 
 export default function robots(): MetadataRoute.Robots {
   return {

@@ -87,7 +87,7 @@ export default async function Home() {
       <main id="top">
         <div className={styles.wrap}>
           <div className={styles.hero}>
-            <p className={styles.kicker}>For people who build with Cursor, Claude and GPT</p>
+            <p className={styles.kicker}>The security scanner for apps built with Cursor, Claude and GPT</p>
             <h1 className={styles.h1}>Find out what&apos;s wrong with the app you just shipped.</h1>
             <p className={styles.sub}>
               Hakscan checks your code and your live site for security problems, then explains each one in words you
@@ -129,7 +129,7 @@ Pathname to a Restricted Directory
               </div>
               <div className={`${styles.pane} ${styles.plain}`}>
                 <p className={styles.paneTag}>What Hakscan hands you</p>
-                <h4>Someone can open files on your server that you never meant to share.</h4>
+                <h3>Someone can open files on your server that you never meant to share.</h3>
                 <p>
                   Your upload handler trusts the filename it&apos;s given. If a visitor sends a filename with{" "}
                   <span className={styles.mono}>../</span> in it, they can walk out of your uploads folder and read
@@ -240,7 +240,7 @@ if (!safe.startsWith(UPLOAD_DIR)) throw new Error('bad path');`}
               <p>Worth knowing before you sign up, not buried in the terms page.</p>
               <div className={styles.limitRow}>
                 <div>
-                  <h4>Not a penetration test</h4>
+                  <h3>Not a penetration test</h3>
                   <p>
                     We never attack, exploit or try to break your site. The live-site scan is strictly passive: it
                     reads what your server already gives out. If you need someone actively trying to break in, you
@@ -248,21 +248,21 @@ if (!safe.startsWith(UPLOAD_DIR)) throw new Error('bad path');`}
                   </p>
                 </div>
                 <div>
-                  <h4>Not for other people&apos;s projects</h4>
+                  <h3>Not for other people&apos;s projects</h3>
                   <p>
                     You can only scan things you can prove you own. This is enforced on our servers, not just hidden
                     in the interface. It&apos;s a legal line, and we hold it.
                   </p>
                 </div>
                 <div>
-                  <h4>Not a team product yet</h4>
+                  <h3>Not a team product yet</h3>
                   <p>
                     One account, one person, for now. No shared workspaces, no inviting colleagues, no shared
                     targets. If you need that today, we&apos;re not the right fit yet.
                   </p>
                 </div>
                 <div>
-                  <h4>Not a guarantee</h4>
+                  <h3>Not a guarantee</h3>
                   <p>
                     No scanner catches everything, and anyone claiming otherwise is selling you something. We find
                     what these tools can find, explain it honestly, and tell you when we&apos;re unsure.
@@ -282,7 +282,7 @@ if (!safe.startsWith(UPLOAD_DIR)) throw new Error('bad path');`}
             </p>
             <div className={styles.prices}>
               <div className={styles.price}>
-                <p className={styles.name}>Free</p>
+                <h3 className={styles.name}>Free</h3>
                 <p className={styles.amount}>$0</p>
                 <p>Enough to find out whether the thing you shipped has a problem.</p>
                 <ul>
@@ -296,7 +296,7 @@ if (!safe.startsWith(UPLOAD_DIR)) throw new Error('bad path');`}
                 </Link>
               </div>
               <div className={`${styles.price} ${styles.pricePro}`}>
-                <p className={styles.name}>Pro</p>
+                <h3 className={styles.name}>Pro</h3>
                 <p className={styles.amount}>
                   ${proPriceUsd} <small>/ month</small>
                 </p>
@@ -341,6 +341,8 @@ if (!safe.startsWith(UPLOAD_DIR)) throw new Error('bad path');`}
               alt="Launching on Better Launch"
               width={200}
               height={56}
+              loading="lazy"
+              fetchPriority="low"
             />
           </a>
           <a
@@ -354,6 +356,8 @@ if (!safe.startsWith(UPLOAD_DIR)) throw new Error('bad path');`}
               alt="Hakscan Ai - Your AI wrote the code. We check it. | Product Hunt"
               width={250}
               height={54}
+              loading="lazy"
+              fetchPriority="low"
             />
           </a>
         </div>
@@ -361,7 +365,7 @@ if (!safe.startsWith(UPLOAD_DIR)) throw new Error('bad path');`}
           <span>Hakscan — QivaLabs LLP, Udaipur</span>
           <span>
             <a href="#limits">What we don&apos;t do</a> &nbsp; <a href="#pricing">Pricing</a> &nbsp;{" "}
-            <Link href="/legal/terms">Terms</Link> &nbsp; <a href="#">Privacy</a>
+            <Link href="/legal/terms">Terms</Link> &nbsp; <Link href="/legal/privacy">Privacy</Link>
           </span>
         </div>
       </footer>
