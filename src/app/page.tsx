@@ -1,23 +1,136 @@
 import Link from "next/link";
 import Script from "next/script";
-import { Newsreader } from "next/font/google";
+import { Montserrat } from "next/font/google";
 import { createPublicClient } from "@/lib/supabase/public";
 import { LandingMobileNav } from "@/components/landing/mobile-nav";
+import { HeroScanCta } from "@/components/landing/hero-scan-cta";
 import styles from "./landing.module.css";
 
-// This page's own serif body face — the rest of the app only loads
-// JetBrains Mono (next/font/local in layout.tsx, reused here via
-// --font-jbm), so Newsreader is scoped to just this page's font
-// variable rather than added to the shared layout.
-const newsreader = Newsreader({
+// This page's own display/body face — the rest of the app only loads
+// JetBrains Mono (next/font/local in layout.tsx), so Montserrat is
+// scoped to just this page's font variable. Self-hosted via next/font
+// rather than the Google Fonts <link>/@import the original design used,
+// matching this project's existing convention (no CSP change needed,
+// no external render-blocking request).
+const montserrat = Montserrat({
   subsets: ["latin"],
-  style: ["normal", "italic"],
   weight: ["300", "400", "500", "600", "700"],
-  variable: "--font-newsreader",
+  variable: "--font-montserrat",
   display: "swap",
 });
 
 const META_PIXEL_ID = "1359487770578149";
+
+const NAV_LINKS = [
+  { href: "#how-it-works", label: "How it works" },
+  { href: "#what-we-scan", label: "What we scan" },
+  { href: "#pricing", label: "Pricing" },
+];
+
+const SCAN_TYPES = [
+  {
+    icon: "🔑",
+    label: "Exposed secrets",
+    desc: "API keys, tokens, and credentials committed to source code or visible in network responses.",
+    severity: "critical" as const,
+  },
+  {
+    icon: "🚪",
+    label: "Open admin routes",
+    desc: "Unprotected admin panels, dashboards, and internal endpoints accessible without authentication.",
+    severity: "high" as const,
+  },
+  {
+    icon: "📄",
+    label: "Leaked config files",
+    desc: ".env files, database configs, and deployment secrets exposed on the live server.",
+    severity: "critical" as const,
+  },
+  {
+    icon: "💉",
+    label: "Injection vectors",
+    desc: "SQL injection, command injection, and XSS paths introduced by AI-generated query code.",
+    severity: "high" as const,
+  },
+  {
+    icon: "🔒",
+    label: "Missing auth checks",
+    desc: "Endpoints that accept requests without validating session tokens or user permissions.",
+    severity: "high" as const,
+  },
+  {
+    icon: "📦",
+    label: "Vulnerable dependencies",
+    desc: "Third-party packages with known CVEs pulled in via npm, pip, or other package managers.",
+    severity: "medium" as const,
+  },
+];
+
+const STEPS = [
+  {
+    num: "01",
+    title: "Connect your repo or URL",
+    desc: "Paste a GitHub repository link or your live site URL. No setup, no configuration, no CI pipeline required.",
+  },
+  {
+    num: "02",
+    title: "We verify ownership",
+    desc: "Add a small DNS record or a file to your repo. Takes under a minute. Prevents anyone from scanning sites they don't own.",
+  },
+  {
+    num: "03",
+    title: "Scan runs in isolation",
+    desc: "Semgrep, Gitleaks, and OWASP ZAP run in a sandboxed environment. Your code never touches our main infrastructure.",
+  },
+  {
+    num: "04",
+    title: "Get a plain-English report",
+    desc: "AI reads the raw findings and explains what's wrong, how serious it is, and the exact lines to change — no security background needed.",
+  },
+];
+
+const FINDINGS = [
+  {
+    id: "HAK-001",
+    severity: "CRITICAL" as const,
+    title: "Stripe secret key exposed in source",
+    file: "src/lib/stripe.ts:14",
+    desc: "STRIPE_SECRET_KEY is hardcoded and committed. Anyone with repo access can make charges on your account.",
+    fix: "Move to .env and add to .gitignore. Rotate the key immediately at dashboard.stripe.com/apikeys.",
+  },
+  {
+    id: "HAK-002",
+    severity: "HIGH" as const,
+    title: "Unauthenticated /admin/users endpoint",
+    file: "src/pages/api/admin/users.ts:1",
+    desc: "This route returns all user emails and roles without checking if the requester is an admin.",
+    fix: 'Add a middleware check: if (!session?.user?.role === "admin") return res.status(403).json({ error: "Forbidden" })',
+  },
+  {
+    id: "HAK-003",
+    severity: "MEDIUM" as const,
+    title: "next-auth 4.22.1 has known session fixation vulnerability",
+    file: "package.json:18",
+    desc: "CVE-2023-48309 allows session fixation under certain OAuth flows.",
+    fix: "Run: npm install next-auth@latest — fixed in 4.24.5.",
+  },
+];
+
+const SEVERITY_COLOR: Record<(typeof FINDINGS)[number]["severity"], string> = {
+  CRITICAL: "var(--color-critical)",
+  HIGH: "var(--color-high)",
+  MEDIUM: "var(--color-medium)",
+};
+const SEVERITY_BG: Record<(typeof FINDINGS)[number]["severity"], string> = {
+  CRITICAL: "#2a1210",
+  HIGH: "#251f0a",
+  MEDIUM: "#0d1529",
+};
+const SCAN_TYPE_COLOR: Record<(typeof SCAN_TYPES)[number]["severity"], { color: string; background: string }> = {
+  critical: { color: "var(--color-critical)", background: "#2a1210" },
+  high: { color: "var(--color-high)", background: "#251f0a" },
+  medium: { color: "var(--color-medium)", background: "#0d1529" },
+};
 
 export default async function Home() {
   const supabase = createPublicClient();
@@ -25,7 +138,7 @@ export default async function Home() {
   const proPriceUsd = pricing?.pro_price_usd ?? 24;
 
   return (
-    <div className={`${styles.landing} ${newsreader.variable}`}>
+    <div className={`${styles.landing} ${montserrat.variable}`}>
       {/* Meta Pixel — afterInteractive keeps it off the critical path,
           same pattern as the GA tag in layout.tsx. connect.facebook.net /
           www.facebook.com are allow-listed in next.config.ts's CSP;
@@ -56,317 +169,282 @@ export default async function Home() {
         />
       </noscript>
 
-      <header className={styles.header}>
-        <nav className={styles.nav}>
-          <Link className={styles.brand} href="#top" aria-label="Hakscan home">
-            <svg viewBox="0 0 100 100" aria-hidden="true">
-              <g fill="none" stroke="var(--teal)" strokeWidth={9} strokeLinecap="round" strokeLinejoin="round">
-                <path d="M 18 42 L 18 18 L 42 18" />
-                <path d="M 82 58 L 82 82 L 58 82" />
-              </g>
-              <line x1={29} y1={71} x2={63} y2={37} stroke="var(--teal)" strokeWidth={5} strokeLinecap="round" />
-              <circle cx={70} cy={30} r={7} fill="var(--flag)" />
-            </svg>
-            <b>
-              hak<span>scan</span>
-            </b>
+      <nav className={styles.nav}>
+        <Link href="#top" className={styles.brand} aria-label="Hakscan home">
+          <span className={styles.brandMark}>hk</span>
+          <span className={styles.brandName}>Hakscan</span>
+        </Link>
+
+        <div className={styles.navLinks}>
+          {NAV_LINKS.map((link) => (
+            <a key={link.href} href={link.href}>
+              {link.label}
+            </a>
+          ))}
+        </div>
+
+        <div className={styles.navActions}>
+          <Link href="/login" className={styles.navLoginLink}>
+            Log in
           </Link>
-          <div className={styles.navlinks}>
-            <a href="#how">How it works</a>
-            <a href="#scans">What we check</a>
-            <a href="#limits">What we don&apos;t do</a>
-            <a href="#pricing">Pricing</a>
-          </div>
-          <Link className={`${styles.btn} ${styles.btnSolid} ${styles.navCta}`} href="/signup">
-            Scan my project
+          <Link href="/signup" className={styles.navCta}>
+            Scan free
           </Link>
-          <LandingMobileNav />
-        </nav>
-      </header>
+        </div>
 
-      <main id="top">
-        <div className={styles.wrap}>
-          <div className={styles.hero}>
-            <p className={styles.kicker}>The security scanner for apps built with Cursor, Claude and GPT</p>
-            <h1 className={styles.h1}>Find out what&apos;s wrong with the app you just shipped.</h1>
-            <p className={styles.sub}>
-              Hakscan checks your code and your live site for security problems, then explains each one in words you
-              already understand, with the fix written out. You don&apos;t need a security background to use it.
-            </p>
-            <div className={styles.ctaRow}>
-              <Link className={`${styles.btn} ${styles.btnSolid}`} href="/signup">
-                Scan one project free
-              </Link>
-              <a className={`${styles.btn} ${styles.btnLine}`} href="#how">
-                See how it works
-              </a>
-              <span className={styles.ctaNote}>No card. Takes about two minutes.</span>
-            </div>
+        <LandingMobileNav />
+      </nav>
+
+      <section id="top" className={styles.hero}>
+        <div className={styles.heroGrid} />
+        <div className={styles.heroInner}>
+          <div className={styles.badge}>
+            <span className={styles.badgeDot} />
+            First scan is free — no credit card
+          </div>
+
+          <h1 className={styles.h1}>
+            Is your app
+            <br />
+            <span>actually secure?</span>
+          </h1>
+
+          <p className={styles.sub}>
+            You shipped with Claude, Cursor, or GPT. Now find out what got skipped — exposed keys, open admin routes,
+            leaked .env files — before your users or investors do.
+          </p>
+
+          <HeroScanCta />
+
+          <p className={styles.scanNote}>Results in 2–4 minutes · Ownership verified before scan</p>
+
+          <div className={styles.trustRow}>
+            {["Semgrep", "Gitleaks", "OWASP ZAP"].map((tool) => (
+              <span key={tool} className={styles.trustTool}>
+                {tool}
+              </span>
+            ))}
+            <span className={styles.trustNote}>Runs in an isolated sandbox</span>
           </div>
         </div>
+      </section>
 
-        <div className={styles.wrap}>
-          <div className={styles.demo}>
-            <div className={styles.demoHead}>
-              <p>
-                <span className={styles.dot} />A real finding, before and after
-              </p>
-              <span className={styles.sev}>Medium</span>
-            </div>
-            <div className={styles.panes}>
-              <div className={styles.pane}>
-                <p className={styles.paneTag}>What a normal scanner hands you</p>
-                <p className={styles.raw}>
-                  <i>CWE-22</i>
-                  {`: Improper Limitation of a
-Pathname to a Restricted Directory
-  rule.id  javascript.lang.security.
-           audit.path-traversal
-  loc      handlers/upload.ts:41:18
-  sink     fs.createReadStream(p)
-  conf     HIGH`}
-                </p>
+      <section className={styles.reportSection}>
+        <div className={styles.reportCard}>
+          <div className={styles.reportBar}>
+            <span className={styles.reportDot} style={{ background: "#f47067" }} />
+            <span className={styles.reportDot} style={{ background: "#e5c76b" }} />
+            <span className={styles.reportDot} style={{ background: "#3ddc84" }} />
+            <span className={styles.reportBarLabel}>hakscan — scan report · github.com/acme/saas-app · 14 Sep 2026</span>
+          </div>
+
+          <div className={styles.reportSummary}>
+            {[
+              { label: "Critical", count: 2, color: "var(--color-critical)" },
+              { label: "High", count: 3, color: "var(--color-high)" },
+              { label: "Medium", count: 5, color: "var(--color-medium)" },
+              { label: "Files scanned", count: 284, color: "var(--color-muted)" },
+            ].map(({ label, count, color }) => (
+              <div key={label} className={styles.reportStat}>
+                <span className={styles.reportStatNum} style={{ color }}>
+                  {count}
+                </span>
+                <span className={styles.reportStatLabel}>{label}</span>
               </div>
-              <div className={`${styles.pane} ${styles.plain}`}>
-                <p className={styles.paneTag}>What Hakscan hands you</p>
-                <h3>Someone can open files on your server that you never meant to share.</h3>
-                <p>
-                  Your upload handler trusts the filename it&apos;s given. If a visitor sends a filename with{" "}
-                  <span className={styles.mono}>../</span> in it, they can walk out of your uploads folder and read
-                  other files, including your config.
-                </p>
-                <div className={styles.fixbox}>
-                  {`const safe = path.resolve(UPLOAD_DIR, name);
-if (!safe.startsWith(UPLOAD_DIR)) throw new Error('bad path');`}
+            ))}
+          </div>
+
+          <div>
+            {FINDINGS.map((f) => (
+              <div key={f.id} className={styles.findingRow}>
+                <div className={styles.findingMeta}>
+                  <span
+                    className={styles.severityTag}
+                    style={{ color: SEVERITY_COLOR[f.severity], background: SEVERITY_BG[f.severity], borderColor: SEVERITY_BG[f.severity] }}
+                  >
+                    {f.severity}
+                  </span>
+                  <span className={styles.findingId}>{f.id}</span>
+                </div>
+                <div>
+                  <p className={styles.findingTitle}>{f.title}</p>
+                  <p className={styles.findingFile}>{f.file}</p>
+                  <p className={styles.findingDesc}>{f.desc}</p>
+                  <div className={styles.fixBox}>
+                    <span className={styles.fixLabel}>fix → </span>
+                    {f.fix}
+                  </div>
                 </div>
               </div>
-            </div>
+            ))}
           </div>
         </div>
+        <p className={styles.reportCaption}>Example output — your actual report will reflect your codebase</p>
+      </section>
 
-        <div className={styles.wrap}>
-          <section id="how" className={`${styles.section} ${styles.anchorTarget}`}>
-            <h2 className={styles.secTitle}>Four steps, start to finished report</h2>
-            <p className={styles.secLead}>
-              Most people get through this the first time without reading any documentation. Here is the whole
-              thing.
-            </p>
-            <div className={styles.steps}>
-              <div className={styles.step}>
-                <div className={styles.stepN}>Step 1</div>
-                <div>
-                  <h3>Point us at your project</h3>
-                  <p>
-                    Connect a GitHub repository, paste the URL of a site you run, or both. If you built it and
-                    it&apos;s live, it can be scanned.
-                  </p>
-                </div>
-              </div>
-              <div className={styles.step}>
-                <div className={styles.stepN}>Step 2</div>
-                <div>
-                  <h3>Prove it&apos;s yours</h3>
-                  <p>
-                    For a repository, we check you have admin access on GitHub. For a website, you add a DNS record
-                    or a meta tag we give you. Nothing gets scanned until this passes, and we check it every time,
-                    not just once.
-                  </p>
-                </div>
-              </div>
-              <div className={styles.step}>
-                <div className={styles.stepN}>Step 3</div>
-                <div>
-                  <h3>We run the scan</h3>
-                  <p>
-                    Your code runs through real, well-known security tools inside a sealed container that has no
-                    access to the internet or to anyone else&apos;s data. When the scan finishes, the container is
-                    destroyed along with your code.
-                  </p>
-                </div>
-              </div>
-              <div className={styles.step}>
-                <div className={styles.stepN}>Step 4</div>
-                <div>
-                  <h3>You get findings you can act on</h3>
-                  <p>
-                    We drop the duplicates and the false alarms, sort what&apos;s left by how much it actually
-                    matters, and rewrite each one in plain English with the fix. Raw technical detail is still there
-                    behind a toggle if you want it.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </section>
+      <section id="how-it-works" className={styles.section}>
+        <div className={styles.sectionHead}>
+          <p className={styles.sectionEyebrow}>HOW IT WORKS</p>
+          <h2 className={styles.sectionTitle}>
+            From repo to report
+            <br />
+            in minutes
+          </h2>
         </div>
 
-        <div className={styles.wrap}>
-          <section id="scans" className={`${styles.section} ${styles.anchorTarget}`}>
-            <h2 className={styles.secTitle}>What we actually check</h2>
-            <p className={styles.secLead}>
-              Two kinds of target, four established open-source tools underneath. Nothing invented, nothing
-              proprietary hiding the work.
-            </p>
-            <div className={styles.grid2}>
-              <div className={styles.card}>
-                <h3>Your code repository</h3>
-                <p className={styles.cardTools}>Semgrep&nbsp;+&nbsp;Gitleaks</p>
-                <p>We read your source the way a reviewer would, looking for patterns that let an attacker in.</p>
-                <ul>
-                  <li>Injection flaws, unsafe file handling, missing input checks</li>
-                  <li>API keys, tokens and passwords committed by accident</li>
-                  <li>Authentication and permission gaps in your routes</li>
-                  <li>Dangerous defaults left switched on</li>
-                </ul>
-              </div>
-              <div className={styles.card}>
-                <h3>Your live website</h3>
-                <p className={styles.cardTools}>OWASP ZAP&nbsp;·&nbsp;passive mode only</p>
-                <p>We look at what your running site tells the outside world, without touching or stressing it.</p>
-                <ul>
-                  <li>Missing security headers browsers rely on</li>
-                  <li>Cookie and session settings that leak</li>
-                  <li>Server details exposed to anyone who asks</li>
-                  <li>Transport and certificate problems</li>
-                </ul>
-              </div>
+        <div className={styles.stepsGrid}>
+          {STEPS.map((step) => (
+            <div key={step.num} className={styles.stepCard}>
+              <div className={styles.stepNum}>{step.num}</div>
+              <h3>{step.title}</h3>
+              <p>{step.desc}</p>
             </div>
-          </section>
+          ))}
+        </div>
+      </section>
+
+      <section id="what-we-scan" className={styles.section}>
+        <div className={styles.sectionHead}>
+          <p className={styles.sectionEyebrow}>WHAT WE SCAN</p>
+          <h2 className={styles.sectionTitle}>
+            What AI tools tend
+            <br />
+            to skip
+          </h2>
         </div>
 
-        <div className={styles.wrap}>
-          <section id="limits" className={`${styles.section} ${styles.anchorTarget}`}>
-            <div className={styles.limits}>
-              <h2>What Hakscan will not do</h2>
-              <p>Worth knowing before you sign up, not buried in the terms page.</p>
-              <div className={styles.limitRow}>
-                <div>
-                  <h3>Not a penetration test</h3>
-                  <p>
-                    We never attack, exploit or try to break your site. The live-site scan is strictly passive: it
-                    reads what your server already gives out. If you need someone actively trying to break in, you
-                    need a pentest, and that&apos;s a different thing.
-                  </p>
-                </div>
-                <div>
-                  <h3>Not for other people&apos;s projects</h3>
-                  <p>
-                    You can only scan things you can prove you own. This is enforced on our servers, not just hidden
-                    in the interface. It&apos;s a legal line, and we hold it.
-                  </p>
-                </div>
-                <div>
-                  <h3>Not a team product yet</h3>
-                  <p>
-                    One account, one person, for now. No shared workspaces, no inviting colleagues, no shared
-                    targets. If you need that today, we&apos;re not the right fit yet.
-                  </p>
-                </div>
-                <div>
-                  <h3>Not a guarantee</h3>
-                  <p>
-                    No scanner catches everything, and anyone claiming otherwise is selling you something. We find
-                    what these tools can find, explain it honestly, and tell you when we&apos;re unsure.
-                  </p>
-                </div>
+        <div className={styles.scanTypesGrid}>
+          {SCAN_TYPES.map((item) => (
+            <div key={item.label} className={styles.scanTypeCard}>
+              <div className={styles.scanTypeIcon}>{item.icon}</div>
+              <div className={styles.scanTypeHead}>
+                <h3>{item.label}</h3>
+                <span className={styles.scanTypeSeverity} style={SCAN_TYPE_COLOR[item.severity]}>
+                  {item.severity}
+                </span>
               </div>
+              <p className={styles.scanTypeDesc}>{item.desc}</p>
             </div>
-          </section>
+          ))}
+        </div>
+      </section>
+
+      <section id="pricing" className={styles.section}>
+        <div className={styles.sectionHead}>
+          <p className={styles.sectionEyebrow}>PRICING</p>
+          <h2 className={styles.sectionTitle}>Simple, honest pricing</h2>
         </div>
 
-        <div className={styles.wrap}>
-          <section id="pricing" className={`${styles.section} ${styles.anchorTarget}`}>
-            <h2 className={styles.secTitle}>Pricing</h2>
-            <p className={styles.secLead}>
-              Start free, stay free if one project is all you have. No demo call, no quote, no annual commitment to
-              begin.
-            </p>
-            <div className={styles.prices}>
-              <div className={styles.price}>
-                <h3 className={styles.name}>Free</h3>
-                <p className={styles.amount}>$0</p>
-                <p>Enough to find out whether the thing you shipped has a problem.</p>
-                <ul>
-                  <li>One project, scanned whenever you want</li>
-                  <li>Full findings with plain-English explanations</li>
-                  <li>Downloadable PDF report</li>
-                  <li>Email alert when a scan finishes</li>
-                </ul>
-                <Link className={`${styles.btn} ${styles.btnLine}`} href="/signup">
-                  Start free
-                </Link>
-              </div>
-              <div className={`${styles.price} ${styles.pricePro}`}>
-                <h3 className={styles.name}>Pro</h3>
-                <p className={styles.amount}>
-                  ${proPriceUsd} <small>/ month</small>
-                </p>
-                <p>For when you&apos;re running more than one thing and shipping often.</p>
-                <ul>
-                  <li>Unlimited projects and sites</li>
-                  <li>Automatic weekly or monthly re-scans</li>
-                  <li>Your scans skip the queue</li>
-                  <li>Everything in Free</li>
-                </ul>
-                <Link className={`${styles.btn} ${styles.btnSolid}`} href="/signup">
-                  Go Pro
-                </Link>
-              </div>
-            </div>
-          </section>
-        </div>
+        <div className={styles.pricesGrid}>
+          <div className={styles.priceCard}>
+            <h3 className={styles.planName}>Free</h3>
+            <div className={styles.planAmount}>$0</div>
+            <ul className={styles.planFeatures}>
+              {["1 repo or URL scan", "Full vulnerability report", "Plain-English fix suggestions", "No credit card required"].map(
+                (f) => (
+                  <li key={f}>
+                    <span className={styles.planCheck}>✓</span>
+                    {f}
+                  </li>
+                )
+              )}
+            </ul>
+            <Link href="/signup" className={`${styles.planCta} ${styles.planCtaLine}`}>
+              Scan for free
+            </Link>
+          </div>
 
-        <div className={styles.wrap}>
-          <div className={`${styles.close} ${styles.anchorTarget}`} id="start">
-            <h2>We scanned ourselves before asking you to trust us.</h2>
+          <div className={`${styles.priceCard} ${styles.pricePro}`}>
+            <span className={styles.popularTag}>POPULAR</span>
+            <h3 className={styles.planName}>Pro</h3>
+            <div className={styles.planAmount}>
+              ${proPriceUsd}
+              <small>/month</small>
+            </div>
+            <ul className={styles.planFeatures}>
+              {[
+                "Unlimited scans",
+                "Scheduled rescans (daily / weekly)",
+                "Slack & email alerts on new findings",
+                "Historical diff — see what changed",
+                "Priority support",
+              ].map((f) => (
+                <li key={f}>
+                  <span className={styles.planCheck}>✓</span>
+                  {f}
+                </li>
+              ))}
+            </ul>
+            <Link href="/signup" className={`${styles.planCta} ${styles.planCtaSolid}`}>
+              Start with free scan →
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      <section className={styles.section}>
+        <div className={styles.ctaBanner}>
+          <div className={styles.ctaGlow} />
+          <div className={styles.ctaContent}>
+            <h2>
+              Your app is live.
+              <br />
+              Is it safe?
+            </h2>
             <p>
-              Hakscan found three problems in its own code and site. Two were fixed the same day, and the third
-              turned out to be a false alarm the tool caught on its own.
+              AI-built apps get audited when they get funded, acquired, or breached. Know your exposure before someone
+              else finds it first.
             </p>
-            <div className={styles.ctaRow}>
-              <Link className={`${styles.btn} ${styles.btnSolid}`} href="/signup">
-                Scan one project free
-              </Link>
-              <span className={styles.ctaNote}>No card. Takes about two minutes.</span>
-            </div>
+            <Link href="/signup" className={`${styles.planCta} ${styles.planCtaSolid}`} style={{ display: "inline-block" }}>
+              Run a free scan
+            </Link>
           </div>
         </div>
-      </main>
+      </section>
 
       <footer className={styles.footer}>
-        <div className={`${styles.wrap} ${styles.badges}`}>
-          <a href="https://www.betterlaunch.co/product/hakscan" target="_blank" rel="noopener noreferrer">
-            {/* eslint-disable-next-line @next/next/no-img-element -- external launch-platform badge, not app content */}
-            <img
-              src="https://www.betterlaunch.co/badge-launching-light.svg"
-              alt="Launching on Better Launch"
-              width={200}
-              height={56}
-              loading="lazy"
-              fetchPriority="low"
-            />
-          </a>
-          <a
-            href="https://www.producthunt.com/products/hakscan-ai?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-hakscan-ai"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element -- external launch-platform badge, not app content */}
-            <img
-              src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1250664&theme=dark&t=1790337942006"
-              alt="Hakscan Ai - Your AI wrote the code. We check it. | Product Hunt"
-              width={250}
-              height={54}
-              loading="lazy"
-              fetchPriority="low"
-            />
-          </a>
+        <div className={`${styles.footInner}`} style={{ paddingBottom: 24, borderBottom: "1px solid var(--color-border-subtle)" }}>
+          <div className={styles.badgesRow}>
+            <a href="https://www.betterlaunch.co/product/hakscan" target="_blank" rel="noopener noreferrer">
+              {/* eslint-disable-next-line @next/next/no-img-element -- external launch-platform badge, not app content */}
+              <img
+                src="https://www.betterlaunch.co/badge-launching-light.svg"
+                alt="Launching on Better Launch"
+                width={180}
+                height={50}
+                loading="lazy"
+                fetchPriority="low"
+              />
+            </a>
+            <a
+              href="https://www.producthunt.com/products/hakscan-ai?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-hakscan-ai"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element -- external launch-platform badge, not app content */}
+              <img
+                src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1250664&theme=dark&t=1790337942006"
+                alt="Hakscan Ai - Your AI wrote the code. We check it. | Product Hunt"
+                width={220}
+                height={48}
+                loading="lazy"
+                fetchPriority="low"
+              />
+            </a>
+          </div>
         </div>
-        <div className={`${styles.wrap} ${styles.foot}`}>
-          <span>Hakscan — QivaLabs LLP, Udaipur</span>
-          <span>
-            <a href="#limits">What we don&apos;t do</a> &nbsp; <a href="#pricing">Pricing</a> &nbsp;{" "}
-            <Link href="/legal/terms">Terms</Link> &nbsp; <Link href="/legal/privacy">Privacy</Link>
-          </span>
+        <div className={styles.footInner}>
+          <div className={styles.footBrand}>
+            <span className={styles.brandMark}>hk</span>
+            <span>Hakscan</span>
+          </div>
+
+          <p className={styles.footCopy}>© 2026 Hakscan. Scans run in isolated sandboxes. We never store your source code.</p>
+
+          <div className={styles.footLinks}>
+            <Link href="/legal/privacy">Privacy</Link>
+            <Link href="/legal/terms">Terms</Link>
+          </div>
         </div>
       </footer>
     </div>

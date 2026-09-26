@@ -6,9 +6,8 @@ import { Menu, X } from "lucide-react";
 import styles from "@/app/landing.module.css";
 
 const LINKS = [
-  { href: "#how", label: "How it works" },
-  { href: "#scans", label: "What we check" },
-  { href: "#limits", label: "What we don't do" },
+  { href: "#how-it-works", label: "How it works" },
+  { href: "#what-we-scan", label: "What we scan" },
   { href: "#pricing", label: "Pricing" },
 ];
 
@@ -28,23 +27,22 @@ export function LandingMobileNav() {
       </button>
       {open && (
         <div className={styles.mobilePanel}>
-          <nav>
-            {LINKS.map((link) => (
-              <a key={link.href} href={link.href} className={styles.mobileLink} onClick={() => setOpen(false)}>
-                {link.label}
-              </a>
-            ))}
-            <div className={styles.mobileCta}>
-              <Link
-                href="/signup"
-                className={`${styles.btn} ${styles.btnSolid}`}
-                onClick={() => setOpen(false)}
-                style={{ width: "100%" }}
-              >
-                Scan my project
-              </Link>
-            </div>
-          </nav>
+          {LINKS.map((link) => (
+            <a
+              key={link.href}
+              href={link.href}
+              className={styles.mobileLink}
+              onClick={() => setOpen(false)}
+            >
+              {link.label}
+            </a>
+          ))}
+          <Link href="/login" className={styles.mobileMuted} onClick={() => setOpen(false)}>
+            Log in
+          </Link>
+          <Link href="/signup" className={styles.mobileCta} onClick={() => setOpen(false)}>
+            Scan free
+          </Link>
         </div>
       )}
     </>

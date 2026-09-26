@@ -2,21 +2,18 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
 import Link from "next/link";
-import { Loader2, MailCheck } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
+import { Loader2, Eye, EyeOff, MailCheck } from "lucide-react";
 import { GithubButton } from "@/components/auth/github-button";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
+import styles from "./auth-shell.module.css";
 
 export function SignupForm() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
 
@@ -46,76 +43,79 @@ export function SignupForm() {
 
   if (sent) {
     return (
-      <motion.div
-        initial={{ opacity: 0, y: 6 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="rounded-lg border border-border bg-card p-6 text-center"
-      >
-        <MailCheck className="mx-auto mb-3 size-8 text-severity-low" strokeWidth={1.5} />
-        <p className="font-medium">Check your inbox</p>
-        <p className="mt-1 text-sm text-muted-foreground">
-          We sent a confirmation link to {email}.
-        </p>
-      </motion.div>
+      <div className={styles.confirmCard}>
+        <MailCheck size={28} strokeWidth={1.5} className={styles.confirmIcon} />
+        <p className={styles.confirmTitle}>Check your inbox</p>
+        <p className={styles.confirmBody}>We sent a confirmation link to {email}.</p>
+      </div>
     );
   }
 
   return (
-    <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}>
-      <div className="space-y-3">
-        <GithubButton label="Sign up with GitHub" />
+    <div>
+      <GithubButton label="Sign up with GitHub" />
+
+      <div className={styles.divider}>
+        <span className={styles.dividerLine} />
+        <span className={styles.dividerText}>or</span>
+        <span className={styles.dividerLine} />
       </div>
 
-      <div className="my-6 flex items-center gap-3 text-xs text-muted-foreground">
-        <Separator className="flex-1" />
-        or
-        <Separator className="flex-1" />
-      </div>
-
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
-          <Input
+      <form onSubmit={handleSubmit} className={styles.form}>
+        <div>
+          <label htmlFor="email" className={styles.label}>
+            Email
+          </label>
+          <input
             id="email"
             type="email"
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@startup.com"
+            placeholder="you@example.com"
+            className={styles.input}
+            style={{ marginTop: 6 }}
           />
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="password">Password</Label>
-          <Input
-            id="password"
-            type="password"
-            required
-            minLength={8}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="At least 8 characters"
-          />
+        <div>
+          <label htmlFor="password" className={styles.label}>
+            Password
+          </label>
+          <div className={styles.inputWrap} style={{ marginTop: 6 }}>
+            <input
+              id="password"
+              type={showPassword ? "text" : "password"}
+              required
+              minLength={8}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="At least 8 characters"
+              className={`${styles.input} ${styles.inputWithToggle}`}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((v) => !v)}
+              className={styles.passwordToggle}
+              aria-label={showPassword ? "Hide password" : "Show password"}
+            >
+              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+            </button>
+          </div>
         </div>
-        <Button type="submit" className="w-full" disabled={loading}>
-          {loading && <Loader2 className="size-4 animate-spin" />}
+        <button type="submit" className={styles.submitBtn} disabled={loading}>
+          {loading && <Loader2 size={16} className="animate-spin" />}
           Create account
-        </Button>
+        </button>
       </form>
 
-      <p className="mt-4 text-center text-xs text-muted-foreground">
-        By continuing you agree to our{" "}
-        <Link href="/legal/terms" className="underline underline-offset-4">
-          Terms
-        </Link>
-        , including the scan-authorization requirement.
+      <p className={styles.switchLine}>
+        Already have an account? <Link href="/login">Sign in</Link>
       </p>
 
-      <p className="mt-6 text-center text-sm text-muted-foreground">
-        Already have an account?{" "}
-        <Link href="/login" className="text-foreground underline underline-offset-4">
-          Log in
-        </Link>
+      <p className={styles.agreeLine}>
+        By continuing you agree to our <Link href="/legal/terms">Terms</Link>, including the scan-authorization
+        requirement, and our <Link href="/legal/privacy">Privacy Policy</Link>.
       </p>
-    </motion.div>
+    </div>
   );
 }

@@ -1,7 +1,16 @@
 import Link from "next/link";
-import { ScanVisual } from "@/components/three/scan-visual";
-import { BorderBeam } from "@/components/ui/border-beam";
-import { CyberGlitchText } from "@/components/ui/cyber-glitch-text";
+import { Montserrat } from "next/font/google";
+import styles from "./auth-shell.module.css";
+
+// Separate from the homepage's own Montserrat instance (src/app/page.tsx)
+// since this shell renders on its own route (/login, /signup) and isn't
+// a descendant of the homepage's font-variable wrapper.
+const montserrat = Montserrat({
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  variable: "--font-montserrat",
+  display: "swap",
+});
 
 export function AuthShell({
   title,
@@ -13,31 +22,25 @@ export function AuthShell({
   children: React.ReactNode;
 }) {
   return (
-    <div className="grid min-h-[100dvh] lg:grid-cols-2">
-      <div className="relative hidden items-center justify-center overflow-hidden bg-gradient-to-b from-card to-background lg:flex">
-        <BorderBeam size={260} duration={12} colorFrom="var(--color-primary)" colorTo="transparent" />
-        <div className="absolute inset-0 -z-0 opacity-70">
-          <ScanVisual className="size-full" />
-        </div>
-        <div className="relative z-10 max-w-sm px-10 text-center">
-          <p className="text-lg font-medium text-foreground/90">
-            Every scan starts with <CyberGlitchText text="proof" scrambleDuration={30} /> it&apos;s
-            yours to scan.
-          </p>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Ownership verification is enforced at the API layer, not just the UI.
-          </p>
-        </div>
-      </div>
+    <div className={`${styles.shell} ${montserrat.variable}`}>
+      <nav className={styles.nav}>
+        <Link href="/" className={styles.brand}>
+          <span className={styles.brandMark}>hk</span>
+          <span className={styles.brandName}>Hakscan</span>
+        </Link>
+        <Link href="/" className={styles.backLink}>
+          <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <path d="M19 12H5M12 5l-7 7 7 7" />
+          </svg>
+          Back to home
+        </Link>
+      </nav>
 
-      <div className="flex items-center justify-center px-6 py-16">
-        <div className="w-full max-w-sm">
-          <Link href="/" className="mb-10 font-semibold tracking-tight lg:hidden">
-            Hakscan
-          </Link>
-          <h1 className="font-heading text-2xl font-medium tracking-tight">{title}</h1>
-          <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>
-          <div className="mt-8">{children}</div>
+      <div className={styles.main}>
+        <div className={styles.card}>
+          <h1 className={styles.title}>{title}</h1>
+          <p className={styles.subtitle}>{subtitle}</p>
+          {children}
         </div>
       </div>
     </div>

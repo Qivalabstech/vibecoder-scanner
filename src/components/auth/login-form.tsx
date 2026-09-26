@@ -2,16 +2,12 @@
 
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { motion } from "framer-motion";
 import Link from "next/link";
-import { Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
+import { Loader2, Eye, EyeOff } from "lucide-react";
 import { GithubButton } from "@/components/auth/github-button";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
+import styles from "./auth-shell.module.css";
 
 // Same constraint as the server-side check in auth/callback/route.ts —
 // `next` is attacker-controllable via the URL, so it must stay a
@@ -29,6 +25,7 @@ export function LoginForm() {
   const params = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -46,52 +43,69 @@ export function LoginForm() {
   }
 
   return (
-    <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}>
-      <div className="space-y-3">
-        <GithubButton label="Continue with GitHub" />
+    <div>
+      <GithubButton label="Continue with GitHub" />
+
+      <div className={styles.divider}>
+        <span className={styles.dividerLine} />
+        <span className={styles.dividerText}>or</span>
+        <span className={styles.dividerLine} />
       </div>
 
-      <div className="my-6 flex items-center gap-3 text-xs text-muted-foreground">
-        <Separator className="flex-1" />
-        or
-        <Separator className="flex-1" />
-      </div>
-
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
-          <Input
+      <form onSubmit={handleSubmit} className={styles.form}>
+        <div>
+          <label htmlFor="email" className={styles.label}>
+            Email
+          </label>
+          <input
             id="email"
             type="email"
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@startup.com"
+            placeholder="you@example.com"
+            className={styles.input}
+            style={{ marginTop: 6 }}
           />
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="password">Password</Label>
-          <Input
-            id="password"
-            type="password"
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="••••••••"
-          />
+        <div>
+          <label htmlFor="password" className={styles.label}>
+            Password
+          </label>
+          <div className={styles.inputWrap} style={{ marginTop: 6 }}>
+            <input
+              id="password"
+              type={showPassword ? "text" : "password"}
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              className={`${styles.input} ${styles.inputWithToggle}`}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((v) => !v)}
+              className={styles.passwordToggle}
+              aria-label={showPassword ? "Hide password" : "Show password"}
+            >
+              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+            </button>
+          </div>
         </div>
-        <Button type="submit" className="w-full" disabled={loading}>
-          {loading && <Loader2 className="size-4 animate-spin" />}
-          Log in
-        </Button>
+        <button type="submit" className={styles.submitBtn} disabled={loading}>
+          {loading && <Loader2 size={16} className="animate-spin" />}
+          Sign in
+        </button>
       </form>
 
-      <p className="mt-6 text-center text-sm text-muted-foreground">
-        No account?{" "}
-        <Link href="/signup" className="text-foreground underline underline-offset-4">
-          Sign up
-        </Link>
+      <p className={styles.switchLine}>
+        Don&apos;t have an account? <Link href="/signup">Sign up free</Link>
       </p>
-    </motion.div>
+
+      <p className={styles.agreeLine}>
+        By continuing you agree to our <Link href="/legal/terms">Terms</Link> and{" "}
+        <Link href="/legal/privacy">Privacy Policy</Link>.
+      </p>
+    </div>
   );
 }

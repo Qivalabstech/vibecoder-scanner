@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { GithubIcon } from "@/components/icons/github-icon";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
+import styles from "./auth-shell.module.css";
 
 export function GithubButton({ label }: { label: string }) {
   const [loading, setLoading] = useState(false);
@@ -29,9 +29,9 @@ export function GithubButton({ label }: { label: string }) {
   }
 
   return (
-    <Button variant="outline" className="w-full" onClick={handleClick} disabled={loading}>
-      {loading ? <Loader2 className="size-4 animate-spin" /> : <GithubIcon className="size-4" />}
+    <button type="button" className={styles.oauthBtn} onClick={handleClick} disabled={loading}>
+      {loading ? <Loader2 size={16} className="animate-spin" /> : <GithubIcon className="size-4" />}
       {label}
-    </Button>
+    </button>
   );
 }
