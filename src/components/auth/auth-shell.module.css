@@ -1,6 +1,7 @@
-/* Matches the new stark black/white landing page tokens (see
+/* Matches the brand-palette landing page tokens (see
    src/app/landing.module.css) — scoped here rather than shared globally
    since these two files render independently and shouldn't couple.
+   Colors are the exact values from Hakscan-Brand-Guidelines.html §02.
    Font: brand guidelines specify JetBrains Mono only, already
    self-hosted site-wide via next/font/local in layout.tsx as
    --font-jbm, which cascades down as a plain CSS custom property. */
@@ -8,14 +9,14 @@
   --font-sans: var(--font-jbm), monospace;
   --font-display: var(--font-jbm), monospace;
   --font-mono: var(--font-jbm), monospace;
-  --color-bg: #000000;
-  --color-surface: #0d0d0d;
-  --color-surface-raised: #1a1a1a;
-  --color-border: #2e2e2e;
-  --color-border-subtle: #181818;
-  --color-text: #ffffff;
-  --color-muted: #888888;
-  --color-accent: #ffffff;
+  --color-bg: #0a0d0f;
+  --color-surface: #12171a;
+  --color-surface-raised: #1a2226;
+  --color-border: #1c2427;
+  --color-border-subtle: #14191b;
+  --color-text: #f5f7f6;
+  --color-muted: #7c8a8d;
+  --color-accent: #00d9b5;
   --color-teal: #00d9b5;
 
   min-height: 100dvh;
@@ -196,7 +197,7 @@
   font-size: 14px;
   font-weight: 700;
   font-family: var(--font-sans);
-  background: var(--color-text);
+  background: var(--color-accent);
   color: var(--color-bg);
   border: none;
   cursor: pointer;

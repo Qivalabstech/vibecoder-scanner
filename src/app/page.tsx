@@ -109,20 +109,24 @@ const FINDINGS = [
   },
 ];
 
+// Brand severity hues (Hakscan-Brand-Guidelines.html §02 — Crit/High/Med),
+// tinted to a low-opacity wash over the ink background rather than the
+// old fixed dark hexes, which were tuned for the Figma export's
+// different (non-brand) severity hues and would clash now.
 const SEVERITY_COLOR: Record<(typeof FINDINGS)[number]["severity"], string> = {
   CRITICAL: "var(--color-critical)",
   HIGH: "var(--color-high)",
   MEDIUM: "var(--color-medium)",
 };
 const SEVERITY_BG: Record<(typeof FINDINGS)[number]["severity"], string> = {
-  CRITICAL: "#2a1210",
-  HIGH: "#251f0a",
-  MEDIUM: "#0d1529",
+  CRITICAL: "rgba(244, 63, 94, 0.14)",
+  HIGH: "rgba(251, 146, 60, 0.14)",
+  MEDIUM: "rgba(251, 191, 36, 0.14)",
 };
 const SCAN_TYPE_COLOR: Record<(typeof SCAN_TYPES)[number]["severity"], { color: string; background: string }> = {
-  critical: { color: "var(--color-critical)", background: "#2a1210" },
-  high: { color: "var(--color-high)", background: "#251f0a" },
-  medium: { color: "var(--color-medium)", background: "#0d1529" },
+  critical: { color: "var(--color-critical)", background: "rgba(244, 63, 94, 0.14)" },
+  high: { color: "var(--color-high)", background: "rgba(251, 146, 60, 0.14)" },
+  medium: { color: "var(--color-medium)", background: "rgba(251, 191, 36, 0.14)" },
 };
 
 export default async function Home() {
@@ -227,9 +231,13 @@ export default async function Home() {
       <section className={styles.reportSection}>
         <div className={styles.reportCard}>
           <div className={styles.reportBar}>
-            <span className={styles.reportDot} style={{ background: "#f47067" }} />
-            <span className={styles.reportDot} style={{ background: "#e5c76b" }} />
-            <span className={styles.reportDot} style={{ background: "#3ddc84" }} />
+            {/* Classic terminal-window traffic lights, redrawn in the brand's
+                own severity/accent hues instead of arbitrary red/yellow/green —
+                the guidelines have no dedicated "success green", so teal
+                stands in for it. */}
+            <span className={styles.reportDot} style={{ background: "var(--color-critical)" }} />
+            <span className={styles.reportDot} style={{ background: "var(--color-medium)" }} />
+            <span className={styles.reportDot} style={{ background: "var(--color-accent)" }} />
             <span className={styles.reportBarLabel}>hakscan — scan report · github.com/acme/saas-app · 14 Sep 2026</span>
           </div>
 

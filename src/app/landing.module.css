@@ -1,7 +1,11 @@
-/* Stark black/white minimal landing page — a deliberate single dark theme,
-   not a light/dark pair. Tokens are scoped under .landing so they never
-   leak into the rest of the app (see Next's own CSS docs warning that
-   global styles aren't removed on route change). */
+/* Dark theme built exactly from Hakscan-Brandkit's documented palette
+   (Hakscan-Brand-Guidelines.html §02 — Color), not the black/white/gray
+   the Figma export originally shipped with:
+     Ink #0A0D0F, Ink Soft #12171A, Paper #F5F7F6, Teal #00D9B5,
+     Amber #FBBF24 (findings/alerts only), severity Crit/High/Med/Low.
+   Tokens are scoped under .landing so they never leak into the rest of
+   the app (see Next's own CSS docs warning that global styles aren't
+   removed on route change). */
 .landing {
   /* Brand guidelines: JetBrains Mono only, one typeface, three weights —
      already self-hosted site-wide via next/font/local in layout.tsx as
@@ -10,21 +14,21 @@
   --font-sans: var(--font-jbm), monospace;
   --font-mono: var(--font-jbm), monospace;
 
-  --color-bg: #000000;
-  --color-surface: #0d0d0d;
-  --color-surface-raised: #1a1a1a;
-  --color-border: #2e2e2e;
-  --color-border-subtle: #181818;
-  --color-text: #ffffff;
-  --color-muted: #888888;
-  --color-accent: #ffffff;
-  --color-accent-dim: #1a1a1a;
-  --color-critical: #f47067;
-  --color-high: #e5c76b;
-  --color-medium: #7aa4f5;
-  /* Brand kit's fixed primary accent — used only for the wordmark's
-     "scan" per the guidelines, not blended into the page's own
-     monochrome accent system above. */
+  --color-bg: #0a0d0f;
+  --color-surface: #12171a;
+  --color-surface-raised: #1a2226;
+  /* #1c2427 is the guidelines' own card/swatch border color, straight
+     out of Hakscan-Brand-Guidelines.html's stylesheet. */
+  --color-border: #1c2427;
+  --color-border-subtle: #14191b;
+  --color-text: #f5f7f6;
+  --color-muted: #7c8a8d;
+  --color-accent: #00d9b5;
+  --color-accent-dim: rgba(0, 217, 181, 0.12);
+  --color-critical: #f43f5e;
+  --color-high: #fb923c;
+  --color-medium: #fbbf24;
+  --color-low: #94a3b8;
   --color-teal: #00d9b5;
 
   background: var(--color-bg);
@@ -109,7 +113,7 @@
   border-radius: 6px;
   font-size: 14px;
   font-weight: 500;
-  background: var(--color-text);
+  background: var(--color-accent);
   color: var(--color-bg);
   text-decoration: none;
   transition: opacity 0.15s;
@@ -177,7 +181,7 @@
   padding: 10px 16px;
   border-radius: 6px;
   font-weight: 500;
-  background: var(--color-text);
+  background: var(--color-accent);
   color: var(--color-bg);
   text-decoration: none;
 }
@@ -216,7 +220,7 @@
   font-family: var(--font-mono);
   color: var(--color-accent);
   background: var(--color-accent-dim);
-  border: 1px solid #2e2e2e;
+  border: 1px solid rgba(0, 217, 181, 0.3);
   margin-bottom: 32px;
 }
 .badgeDot {
@@ -361,7 +365,7 @@
   font-weight: 700;
   white-space: nowrap;
   background: var(--color-accent);
-  color: #000000;
+  color: var(--color-bg);
   border: none;
   cursor: pointer;
   text-decoration: none;
@@ -648,7 +652,7 @@
   font-family: var(--font-mono);
   padding: 2px 8px;
   border-radius: 6px;
-  color: #000000;
+  color: var(--color-bg);
   background: var(--color-accent);
 }
 .planName {
@@ -707,7 +711,7 @@
 }
 .planCtaSolid {
   background: var(--color-accent);
-  color: #000000;
+  color: var(--color-bg);
   font-weight: 700;
 }
 .planCtaSolid:hover {
