@@ -3,9 +3,12 @@
    leak into the rest of the app (see Next's own CSS docs warning that
    global styles aren't removed on route change). */
 .landing {
-  --font-display: var(--font-montserrat), sans-serif;
-  --font-sans: var(--font-montserrat), sans-serif;
-  --font-mono: var(--font-montserrat), sans-serif;
+  /* Brand guidelines: JetBrains Mono only, one typeface, three weights —
+     already self-hosted site-wide via next/font/local in layout.tsx as
+     --font-jbm, which cascades down as a plain CSS custom property. */
+  --font-display: var(--font-jbm), monospace;
+  --font-sans: var(--font-jbm), monospace;
+  --font-mono: var(--font-jbm), monospace;
 
   --color-bg: #000000;
   --color-surface: #0d0d0d;
@@ -19,6 +22,10 @@
   --color-critical: #f47067;
   --color-high: #e5c76b;
   --color-medium: #7aa4f5;
+  /* Brand kit's fixed primary accent — used only for the wordmark's
+     "scan" per the guidelines, not blended into the page's own
+     monochrome accent system above. */
+  --color-teal: #00d9b5;
 
   background: var(--color-bg);
   color: var(--color-text);
@@ -55,23 +62,13 @@
   text-decoration: none;
   color: var(--color-text);
 }
-.brandMark {
-  width: 28px;
-  height: 28px;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  font-weight: 700;
-  background: var(--color-accent);
-  color: #000000;
-  font-family: var(--font-mono);
-}
 .brandName {
   font-size: 14px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.brandAccent {
+  color: var(--color-teal);
 }
 .navLinks {
   display: none;
@@ -361,7 +358,7 @@
   padding: 10px 20px;
   border-radius: 8px;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 700;
   white-space: nowrap;
   background: var(--color-accent);
   color: #000000;
@@ -436,7 +433,7 @@
 }
 .reportStatNum {
   font-size: 20px;
-  font-weight: 600;
+  font-weight: 700;
   font-family: var(--font-display);
 }
 .reportStatLabel {
@@ -607,7 +604,7 @@
 }
 .scanTypeHead h3 {
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 700;
   margin: 0;
 }
 .scanTypeSeverity {
@@ -711,7 +708,7 @@
 .planCtaSolid {
   background: var(--color-accent);
   color: #000000;
-  font-weight: 600;
+  font-weight: 700;
 }
 .planCtaSolid:hover {
   opacity: 0.9;
@@ -781,7 +778,7 @@
 }
 .footBrand span {
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: 0.04em;
 }
 .footCopy {

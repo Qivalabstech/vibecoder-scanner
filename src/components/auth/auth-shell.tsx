@@ -1,16 +1,6 @@
 import Link from "next/link";
-import { Montserrat } from "next/font/google";
+import { HakscanMark } from "@/components/brand/mark";
 import styles from "./auth-shell.module.css";
-
-// Separate from the homepage's own Montserrat instance (src/app/page.tsx)
-// since this shell renders on its own route (/login, /signup) and isn't
-// a descendant of the homepage's font-variable wrapper.
-const montserrat = Montserrat({
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  variable: "--font-montserrat",
-  display: "swap",
-});
 
 export function AuthShell({
   title,
@@ -22,11 +12,13 @@ export function AuthShell({
   children: React.ReactNode;
 }) {
   return (
-    <div className={`${styles.shell} ${montserrat.variable}`}>
+    <div className={styles.shell}>
       <nav className={styles.nav}>
         <Link href="/" className={styles.brand}>
-          <span className={styles.brandMark}>hk</span>
-          <span className={styles.brandName}>Hakscan</span>
+          <HakscanMark size={28} />
+          <span className={styles.brandName}>
+            hak<span className={styles.brandAccent}>scan</span>
+          </span>
         </Link>
         <Link href="/" className={styles.backLink}>
           <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">

@@ -1,24 +1,17 @@
 import Link from "next/link";
 import Script from "next/script";
-import { Montserrat } from "next/font/google";
 import { createPublicClient } from "@/lib/supabase/public";
 import { LandingMobileNav } from "@/components/landing/mobile-nav";
 import { HeroScanCta } from "@/components/landing/hero-scan-cta";
+import { HakscanMark } from "@/components/brand/mark";
 import styles from "./landing.module.css";
 
-// This page's own display/body face — the rest of the app only loads
-// JetBrains Mono (next/font/local in layout.tsx), so Montserrat is
-// scoped to just this page's font variable. Self-hosted via next/font
-// rather than the Google Fonts <link>/@import the original design used,
-// matching this project's existing convention (no CSP change needed,
-// no external render-blocking request).
-const montserrat = Montserrat({
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
-  variable: "--font-montserrat",
-  display: "swap",
-});
-
+// No page-local font here — the brand guidelines specify JetBrains Mono
+// only ("never use a second typeface for body copy"), and that's already
+// self-hosted site-wide via next/font/local in layout.tsx as --font-jbm,
+// which cascades down as a plain CSS custom property. landing.module.css
+// just points its own --font-* tokens at var(--font-jbm) instead of
+// loading a second face.
 const META_PIXEL_ID = "1359487770578149";
 
 const NAV_LINKS = [
@@ -138,7 +131,7 @@ export default async function Home() {
   const proPriceUsd = pricing?.pro_price_usd ?? 24;
 
   return (
-    <div className={`${styles.landing} ${montserrat.variable}`}>
+    <div className={styles.landing}>
       {/* Meta Pixel — afterInteractive keeps it off the critical path,
           same pattern as the GA tag in layout.tsx. connect.facebook.net /
           www.facebook.com are allow-listed in next.config.ts's CSP;
@@ -171,8 +164,10 @@ export default async function Home() {
 
       <nav className={styles.nav}>
         <Link href="#top" className={styles.brand} aria-label="Hakscan home">
-          <span className={styles.brandMark}>hk</span>
-          <span className={styles.brandName}>Hakscan</span>
+          <HakscanMark size={28} />
+          <span className={styles.brandName}>
+            hak<span className={styles.brandAccent}>scan</span>
+          </span>
         </Link>
 
         <div className={styles.navLinks}>
@@ -435,8 +430,10 @@ export default async function Home() {
         </div>
         <div className={styles.footInner}>
           <div className={styles.footBrand}>
-            <span className={styles.brandMark}>hk</span>
-            <span>Hakscan</span>
+            <HakscanMark size={24} />
+            <span>
+              hak<span className={styles.brandAccent}>scan</span>
+            </span>
           </div>
 
           <p className={styles.footCopy}>© 2026 Hakscan. Scans run in isolated sandboxes. We never store your source code.</p>
