@@ -69,9 +69,14 @@ export function LoginForm() {
           />
         </div>
         <div>
-          <label htmlFor="password" className={styles.label}>
-            Password
-          </label>
+          <div className={styles.fieldHead}>
+            <label htmlFor="password" className={styles.label}>
+              Password
+            </label>
+            <Link href="/forgot-password" className={styles.fieldHeadLink}>
+              Forgot password?
+            </Link>
+          </div>
           <div className={styles.inputWrap} style={{ marginTop: 6 }}>
             <input
               id="password"
