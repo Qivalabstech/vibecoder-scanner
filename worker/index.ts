@@ -19,6 +19,21 @@ interface ScanJobData {
   scanId?: string;
 }
 
+// Found live in production: the startup log below was printing this URL
+// verbatim, including the Upstash password in the userinfo portion
+// (rediss://default:<password>@host) — straight into the systemd
+// journal, readable by anyone with journalctl access on the box.
+function redactRedisUrl(url: string): string {
+  try {
+    const u = new URL(url);
+    u.username = "";
+    u.password = "";
+    return u.toString();
+  } catch {
+    return "<unparseable REDIS_URL>";
+  }
+}
+
 const connection = new IORedis(process.env.REDIS_URL ?? "redis://localhost:6379", {
   maxRetriesPerRequest: null,
 });
@@ -238,7 +253,7 @@ const worker = new Worker<ScanJobData>(SCAN_QUEUE_NAME, processScan, {
 worker.on("completed", (job) => console.log(`[worker] scan for target ${job.data.targetId} done`));
 worker.on("failed", (job, err) => console.error(`[worker] scan for target ${job?.data.targetId} failed:`, err.message));
 
-console.log("[worker] listening for scan jobs on Redis:", process.env.REDIS_URL ?? "redis://localhost:6379");
+console.log("[worker] listening for scan jobs on Redis:", redactRedisUrl(process.env.REDIS_URL ?? "redis://localhost:6379"));
 
 const ABUSE_SCAN_INTERVAL_MS = 15 * 60 * 1000; // 15 minutes
 setInterval(() => {
