@@ -74,3 +74,31 @@ export async function sendAbuseAlertEmail(opts: {
            rate limit. Check <code>audit_log</code> for this user_id to see the specific events.</p>`,
   });
 }
+
+/**
+ * The in-house stand-in for a real error-monitoring service (Sentry etc.)
+ * — see ops-monitor.ts for the threshold/dedupe logic that decides when
+ * to call this. Not a replacement for one if this project ever adopts
+ * one, but it closes the "nothing pages anyone" gap for free using
+ * infrastructure already in place (audit_log + Resend).
+ */
+export async function sendOpsAlertEmail(opts: { count: number; breakdown: Record<string, number> }) {
+  if (!process.env.RESEND_API_KEY || !process.env.ADMIN_EMAIL) return;
+
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  const rows = Object.entries(opts.breakdown)
+    .map(([action, n]) => `<li><code>${action}</code>: ${n}</li>`)
+    .join("");
+
+  await resend.emails.send({
+    from: process.env.RESEND_FROM_EMAIL ?? "Hakscan <onboarding@resend.dev>",
+    to: process.env.ADMIN_EMAIL,
+    subject: `Ops alert: ${opts.count} scan/API failures in the last hour`,
+    html: `<p><strong>${opts.count}</strong> scan or scan-trigger failures were logged in the last hour —
+           more than the usual background rate of one-off transient failures.</p>
+           <ul>${rows}</ul>
+           <p>Check <code>audit_log</code> (actions above) for the specific error messages and affected
+           users. This usually means something systemic broke — a Docker image, an API key, the queue
+           backend — rather than one target having a bad day.</p>`,
+  });
+}

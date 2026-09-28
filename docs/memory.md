@@ -1,6 +1,50 @@
 # Memory
 
-## Current state (2026-09-29, pre-deployment security checklist audit)
+## Current state (2026-09-29, built the two flagged features)
+
+Followed up on the two items the security checklist audit flagged but
+didn't build (deferred pending user input, not silently skipped):
+
+**Password reset** — built the full flow: `/forgot-password` (calls
+Supabase's `resetPasswordForEmail`, always shows the same "check your
+inbox" state regardless of whether the email exists, matching
+Supabase's own anti-enumeration behavior on that call) and
+`/reset-password` (only usable via the emailed link — routes through
+the existing `/auth/callback` code-exchange unchanged, and checks for
+a real session on mount before showing the form; a direct/stale visit
+gets "this link isn't valid" instead of a dead form). Restored the
+"Forgot password?" link on `/login` that was deliberately left out
+during the earlier auth redesign specifically because this flow didn't
+exist yet. No new third-party service — reuses the same Supabase auth
+email pipeline already sending signup-confirmation emails.
+
+**Operational alerting** — user didn't have a monitoring account and
+didn't want to sign up for one (Sentry's real free tier turned out to
+require more than they wanted to commit to). Rather than leave this
+flagged forever, built an in-house equivalent using infrastructure
+already in the codebase: `worker/lib/ops-monitor.ts` mirrors the
+existing `abuse-monitor.ts` pattern exactly — scans `audit_log` for a
+burst of failure actions (`scan.failed`, `scan.trigger.insert_failed`,
+`scan.trigger.unhandled_error`, `scan.trigger.queue_unavailable`) in
+the last hour, and if 3+ show up system-wide (not per-user — this is
+about detecting something systemically broken, not one bad actor),
+emails `ADMIN_EMAIL` via the same Resend integration `sendAbuseAlertEmail`
+already uses. Dedupes via an `ops.alert_sent` audit_log row so it's one
+email per incident, not one every 15-minute interval. Wired into
+`worker/index.ts` on the same interval as the abuse monitor.
+
+Not a replacement for a real APM/error-tracking tool if this project
+ever adopts one (no stack traces, no per-error grouping, no dashboard)
+— it's specifically the "something pages a human" gap-closer for free,
+using what's already there.
+
+Verified: tsc clean (worker/ is covered by the root tsconfig's `**/*.ts`
+include, confirmed), ran the worker locally with tsx — both monitors
+registered correctly on startup log output. Redis connection errors in
+that local run are just the absence of a local Redis instance, not a
+code issue.
+
+## Prior state (2026-09-29, pre-deployment security checklist audit)
 
 Walked the codebase against a 9-item pre-deployment security checklist
 (authorization/IDOR, password reset TTL, input validation, CORS, rate

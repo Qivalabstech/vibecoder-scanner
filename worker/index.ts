@@ -6,6 +6,7 @@ import { insertFindings, type InsertedFinding, type Severity } from "./lib/findi
 import { analyzeFindings } from "./lib/ai-analysis";
 import { sendScanCompleteEmail } from "./lib/email";
 import { runAbuseScan } from "./lib/abuse-monitor";
+import { runOpsScan } from "./lib/ops-monitor";
 import { runRepoScan } from "./scanners/repo-scan";
 import { runSiteScan } from "./scanners/site-scan";
 
@@ -244,3 +245,11 @@ setInterval(() => {
   runAbuseScan(createServiceClient()).catch((err) => console.error("[worker] abuse scan failed:", err));
 }, ABUSE_SCAN_INTERVAL_MS);
 console.log("[worker] abuse monitor running every", ABUSE_SCAN_INTERVAL_MS / 60000, "minutes");
+
+// Same cadence as the abuse monitor — the "something reads audit_log and
+// alerts a human" half of the pre-deploy checklist's logging/monitoring
+// item, which was previously just logging with nothing watching it.
+setInterval(() => {
+  runOpsScan(createServiceClient()).catch((err) => console.error("[worker] ops scan failed:", err));
+}, ABUSE_SCAN_INTERVAL_MS);
+console.log("[worker] ops monitor running every", ABUSE_SCAN_INTERVAL_MS / 60000, "minutes");
