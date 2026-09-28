@@ -36,7 +36,10 @@ export async function PATCH(request: Request, ctx: RouteContext<"/api/targets/[i
     .from("targets")
     .update({ scan_frequency: parsed.data.frequency })
     .eq("id", id);
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    console.error("[api/targets/schedule] update failed:", error.message);
+    return NextResponse.json({ error: "internal_error", message: "Couldn't save the schedule." }, { status: 500 });
+  }
 
   try {
     await setScanSchedule(id, parsed.data.frequency);

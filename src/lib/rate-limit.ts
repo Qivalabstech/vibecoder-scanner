@@ -2,6 +2,7 @@ import { createServiceClient } from "@/lib/supabase/service";
 
 const SCAN_TRIGGERS_PER_HOUR = 5;
 const PROMO_VALIDATE_ATTEMPTS_PER_HOUR = 20;
+const VERIFY_ATTEMPTS_PER_HOUR = 20;
 
 /**
  * Blunt per-user throttle so the scanner can't be turned into a free port
@@ -46,4 +47,27 @@ export async function isOverPromoValidateRateLimit(userId: string): Promise<bool
     .gte("created_at", oneHourAgo);
 
   return (count ?? 0) >= PROMO_VALIDATE_ATTEMPTS_PER_HOUR;
+}
+
+/**
+ * The verify endpoint does two real outbound network calls per attempt
+ * (a DNS TXT lookup and an HTTP GET against the target's own site, each
+ * with an 8s timeout) yet had no throttle at all — a logged-in user
+ * could hammer it to tie up server time or repeatedly hit an arbitrary
+ * public site from our IP. Counted off the target.verify.* actions
+ * already written by logAudit in the verify route, same pattern as the
+ * promo-validate throttle above.
+ */
+export async function isOverVerifyRateLimit(userId: string): Promise<boolean> {
+  const service = createServiceClient();
+  const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+
+  const { count } = await service
+    .from("audit_log")
+    .select("*", { count: "exact", head: true })
+    .eq("user_id", userId)
+    .in("action", ["target.verify.success", "target.verify.pending"])
+    .gte("created_at", oneHourAgo);
+
+  return (count ?? 0) >= VERIFY_ATTEMPTS_PER_HOUR;
 }

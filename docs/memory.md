@@ -1,6 +1,78 @@
 # Memory
 
-## Current state (2026-09-24, full-site sweep + hydration fix + repo self-scan)
+## Current state (2026-09-29, pre-deployment security checklist audit)
+
+Walked the codebase against a 9-item pre-deployment security checklist
+(authorization/IDOR, password reset TTL, input validation, CORS, rate
+limiting, error handling, DB indexes, logging/monitoring, rollback
+strategy) and verified each one against the real code rather than
+assuming. Most of it was already solid — this project has a real prior
+incident (migration 0007's comment: an attack simulation against a
+hosted Supabase project found `authenticated` could bypass ownership
+verification, forge billing status, and write directly to every table)
+and the fixes from that are still in place: RLS + table-level REVOKE
+locks every write to service-role-only server code, admin routes check
+`isSuperAdminEmail` at both the layout and API level, the promo-code
+redemption function is parameterized plpgsql with row locking, the
+PayPal webhook verifies its signature, and hot FK columns
+(targets.user_id, scans.target_id, findings.scan_id, audit_log.user_id)
+are all indexed.
+
+**Fixed — real gap found**: `/api/targets/[id]/verify` made two live
+outbound network calls per request (a DNS TXT lookup and an HTTP GET
+against the target's own site, each with an 8s timeout) with zero rate
+limiting — the scan-trigger and promo-validate endpoints both had
+throttles, this one didn't. Added `isOverVerifyRateLimit` in
+`src/lib/rate-limit.ts` (20/hour per user, counted off the
+`target.verify.*` audit-log actions already being written) and wired
+it into the route.
+
+**Fixed — real gap found**: six spots across `src/app/api/targets/`
+returned raw Postgres/Supabase `error.message` straight to the client
+on 500s — internal schema details (column/constraint names) a client
+shouldn't see. Replaced with generic messages, with the real error now
+going to `console.error` (or already captured via `logAudit`) for
+server-side diagnosis. Left this alone on admin-only routes (only the
+env-allowlisted operator ever sees those) and `billing/subscribe`
+(PayPal's own errors are meant to be shown at checkout). Along the way,
+found that target creation's duplicate-add case (unique constraint on
+`(user_id, type, identifier)`) was silently falling into the same
+generic leak — split it out into its own clear `already_added` message,
+which is also a real UX fix: the client already reads `json.message`
+for its toast, and the old code never populated that field at all, so
+users saw a generic "Couldn't add repo" with zero explanation before.
+
+**Added**: branded `not-found.tsx` and `error.tsx` at the app root —
+Next's defaults only follow the OS color scheme and don't pick up this
+app's dark theme, so 404s and error boundaries read as an unstyled
+flash on an otherwise fully branded site. Both use the same ink/paper/
+teal tokens and the real mark component.
+
+**Investigated, not built — password reset**: no forgot-password flow
+exists anywhere in this app (confirmed again; already known from the
+auth redesign earlier this session, where the "Forgot password?" link
+was deliberately left out of the new design for the same reason). The
+checklist item assumes a reset flow exists and checks its token TTL —
+since none exists, there's no TTL to fix; building the flow itself is
+a new feature, out of scope for an audit-and-fix pass.
+
+**Investigated, not built — active alerting**: audit_log logging is
+solid (used throughout for both business events and security denials),
+but there's no error-rate/uptime alerting service (Sentry or similar)
+wired in — the worker logs to console (captured as platform logs) but
+nothing pages anyone on a spike. Flagged rather than silently
+installing a third-party monitoring service and its account/API-key
+requirements without being asked.
+
+**Confirmed already covered, no action**: blue-green/rollback strategy
+— Vercel's own deployment model (immutable per-deploy URLs, instant
+promote/rollback in the dashboard) already satisfies this without any
+app-level code.
+
+Verified: tsc clean, production build clean, `/_not-found` still
+statically prerenders, visually confirmed the new 404 page on-brand.
+
+## Prior state (2026-09-24, full-site sweep + hydration fix + repo self-scan)
 
 Ran a comprehensive "check everything" pass per user request: console
 errors + horizontal overflow on `/`, `/login`, `/signup`, `/dashboard`,

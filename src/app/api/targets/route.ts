@@ -32,7 +32,13 @@ export async function GET() {
     .select("*")
     .order("created_at", { ascending: false });
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  // Generic message to the client — a raw Postgres error can include
+  // column/constraint names an attacker could use to fingerprint the
+  // schema. The real error still goes to server logs for diagnosis.
+  if (error) {
+    console.error("[api/targets] list failed:", error.message);
+    return NextResponse.json({ error: "internal_error", message: "Couldn't load targets." }, { status: 500 });
+  }
   return NextResponse.json({ targets: data });
 }
 
@@ -111,7 +117,19 @@ export async function POST(request: Request) {
       .select()
       .single();
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error) {
+      // 23505 = unique_violation — the (user_id, type, identifier) constraint
+      // means this is always "you already added this repo," a real,
+      // expected case worth a clear message rather than a generic one.
+      if (error.code === "23505") {
+        return NextResponse.json(
+          { error: "already_added", message: "You've already added this repository." },
+          { status: 409 }
+        );
+      }
+      console.error("[api/targets] repo insert failed:", error.message);
+      return NextResponse.json({ error: "internal_error", message: "Couldn't add this target." }, { status: 500 });
+    }
 
     await logAudit({
       userId: user.id,
@@ -142,7 +160,16 @@ export async function POST(request: Request) {
     .select()
     .single();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    if (error.code === "23505") {
+      return NextResponse.json(
+        { error: "already_added", message: "You've already added this site." },
+        { status: 409 }
+      );
+    }
+    console.error("[api/targets] site insert failed:", error.message);
+    return NextResponse.json({ error: "internal_error", message: "Couldn't add this target." }, { status: 500 });
+  }
 
   await logAudit({
     userId: user.id,

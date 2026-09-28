@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { checkDnsTxt, checkMetaTag } from "@/lib/verification";
+import { isOverVerifyRateLimit } from "@/lib/rate-limit";
 import { logAudit } from "@/lib/audit";
 
 export async function POST(_request: Request, ctx: RouteContext<"/api/targets/[id]/verify">) {
@@ -22,6 +23,13 @@ export async function POST(_request: Request, ctx: RouteContext<"/api/targets/[i
   }
   if (!target.verification_token) {
     return NextResponse.json({ error: "no_pending_token" }, { status: 409 });
+  }
+
+  if (await isOverVerifyRateLimit(user.id)) {
+    return NextResponse.json(
+      { error: "rate_limited", message: "Too many verification checks in the last hour. Try again later." },
+      { status: 429 }
+    );
   }
 
   const [dnsOk, metaOk] = await Promise.all([
@@ -62,6 +70,12 @@ export async function POST(_request: Request, ctx: RouteContext<"/api/targets/[i
     .select()
     .single();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    console.error("[api/targets/verify] update failed:", error.message);
+    return NextResponse.json(
+      { error: "internal_error", message: "Verified, but couldn't save it. Try again." },
+      { status: 500 }
+    );
+  }
   return NextResponse.json({ verified: true, target: updated });
 }

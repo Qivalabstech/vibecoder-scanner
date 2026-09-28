@@ -84,7 +84,12 @@ async function handlePost(_request: Request, ctx: RouteContext<"/api/targets/[id
       action: "scan.trigger.insert_failed",
       metadata: { error: error.message, code: error.code },
     });
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    // The real error is already in the audit log above — the client
+    // only gets a generic message, not raw Postgres error details.
+    return NextResponse.json(
+      { error: "internal_error", message: "Couldn't start the scan. Try again." },
+      { status: 500 }
+    );
   }
 
   const { data: profile } = await supabase.from("users").select("plan").eq("id", user.id).single();
