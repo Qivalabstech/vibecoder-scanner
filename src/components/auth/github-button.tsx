@@ -7,7 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import styles from "./auth-shell.module.css";
 
-export function GithubButton({ label }: { label: string }) {
+export function GithubButton({ label, next }: { label: string; next?: string }) {
   const [loading, setLoading] = useState(false);
 
   async function handleClick() {
@@ -16,7 +16,7 @@ export function GithubButton({ label }: { label: string }) {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "github",
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo: `${window.location.origin}/auth/callback${next ? `?next=${encodeURIComponent(next)}` : ""}`,
         // read:user/user:email for identity, repo for the ownership-verification
         // gate (Phase 2) to list repos the user actually administers
         scopes: "read:user user:email repo",
