@@ -97,14 +97,14 @@ const FINDINGS = [
     title: "Unauthenticated /admin/users endpoint",
     file: "src/pages/api/admin/users.ts:1",
     desc: "This route returns all user emails and roles without checking if the requester is an admin.",
-    fix: 'Add a middleware check: if (!session?.user?.role === "admin") return res.status(403).json({ error: "Forbidden" })',
+    fix: 'Add an admin check before any data is read: if (session?.user?.role !== "admin") return res.status(403).json({ error: "Forbidden" })',
   },
   {
     id: "HAK-003",
     severity: "MEDIUM" as const,
     title: "next-auth 4.22.1 has known session fixation vulnerability",
     file: "package.json:18",
-    desc: "CVE-2023-48309 allows session fixation under certain OAuth flows.",
+    desc: "CVE-2023-48309 can let an attacker pass as a signed-in user without valid credentials in some setups.",
     fix: "Run: npm install next-auth@latest — fixed in 4.24.5.",
   },
 ];
@@ -343,7 +343,7 @@ export default async function Home() {
             <h3 className={styles.planName}>Free</h3>
             <div className={styles.planAmount}>$0</div>
             <ul className={styles.planFeatures}>
-              {["1 repo or URL scan", "Full vulnerability report", "Plain-English fix suggestions", "No credit card required"].map(
+              {["One full scan of one repo or live URL", "Full vulnerability report", "Plain-English fix suggestions", "No card required"].map(
                 (f) => (
                   <li key={f}>
                     <span className={styles.planCheck}>✓</span>
@@ -366,11 +366,10 @@ export default async function Home() {
             </div>
             <ul className={styles.planFeatures}>
               {[
-                "Unlimited scans",
-                "Scheduled rescans (daily / weekly)",
-                "Slack & email alerts on new findings",
-                "Historical diff — see what changed",
-                "Priority support",
+                "Unlimited verified targets",
+                "Scheduled rescans (weekly / monthly)",
+                "Priority scan queue",
+                "Full PDF reports + email alerts",
               ].map((f) => (
                 <li key={f}>
                   <span className={styles.planCheck}>✓</span>
@@ -378,8 +377,8 @@ export default async function Home() {
                 </li>
               ))}
             </ul>
-            <Link href="/signup" className={`${styles.planCta} ${styles.planCtaSolid}`}>
-              Start with free scan →
+            <Link href="/signup?next=/settings/billing" className={`${styles.planCta} ${styles.planCtaSolid}`}>
+              Go Pro, ${proPriceUsd}/mo →
             </Link>
           </div>
         </div>
@@ -444,7 +443,7 @@ export default async function Home() {
             </span>
           </div>
 
-          <p className={styles.footCopy}>© 2026 Hakscan. Scans run in isolated sandboxes. We never store your source code.</p>
+          <p className={styles.footCopy}>© 2026 QivaLabs LLP, Udaipur, Rajasthan, India · <a href="mailto:tech@qivalabs.com">tech@qivalabs.com</a> · Scans run in isolated sandboxes. We never store your source code.</p>
 
           <div className={styles.footLinks}>
             <Link href="/legal/privacy">Privacy</Link>

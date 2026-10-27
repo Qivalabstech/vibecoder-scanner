@@ -9,7 +9,7 @@ import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import styles from "./auth-shell.module.css";
 
-export function SignupForm() {
+export function SignupForm({ next = "/dashboard" }: { next?: string }) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -24,7 +24,7 @@ export function SignupForm() {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+      options: { emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}` },
     });
     setLoading(false);
     if (error) {
@@ -34,7 +34,7 @@ export function SignupForm() {
     // If email confirmation is disabled (common in local/dev, sometimes prod),
     // signUp already returns an active session — there's no email to "check."
     if (data.session) {
-      router.push("/dashboard");
+      router.push(next);
       router.refresh();
       return;
     }
@@ -53,7 +53,7 @@ export function SignupForm() {
 
   return (
     <div>
-      <GithubButton label="Sign up with GitHub" />
+      <GithubButton label="Sign up with GitHub" next={next} />
 
       <div className={styles.divider}>
         <span className={styles.dividerLine} />
